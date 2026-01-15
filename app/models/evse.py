@@ -37,12 +37,12 @@ class EVSE(OCPIBaseModel):
     uid: str = Field(..., description="Internal database ID of the EVSE")
     evse_id: Optional[str] = Field(None, description="Formal ID following ISO 15118")
     status: Status
-    status_schedule: Optional[List['StatusSchedule']]
-    capabilities: Optional[List['Capability']]
-    coordinates: Optional[GeoLocation]
-    physical_reference: Optional[str]
+    status_schedule: Optional[List['StatusSchedule']] = []
+    capabilities: Optional[List['Capability']] = []
+    coordinates: Optional[GeoLocation] = None
+    physical_reference: Optional[str] = None
     connectors: List['Connector']
-    directions: Optional[DisplayText]
+    directions: Optional[DisplayText] = None
     floor_level: Optional[str] = None
     coordinates: Optional[dict] = None
     last_updated: datetime

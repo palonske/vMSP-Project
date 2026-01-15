@@ -110,16 +110,23 @@ class Location(OCPIBaseModel):
     # Nested Objects
     related_locations: Optional[List[GeoLocation]] = []
     evses: List['EVSE'] = []  # Assumes EVSE class is defined
-    directions: List[DisplayText] = []
+    directions: Optional[List[DisplayText]] = []
     operator: Optional[BusinessDetails] = None
     suboperator: Optional[BusinessDetails] = None
     owner: Optional[BusinessDetails] = None
-    facilities: Optional[Facility]
+    facilities: Optional[Facility] = None
     images: Optional[List[Image]] = []
-    opening_times: Optional[Hours]
-    charging_when_closed: Optional[bool]
-    energy_mix: Optional[EnergyMix]
+    opening_times: Optional[Hours] = None
+    charging_when_closed: Optional[bool] = None
+    energy_mix: Optional[EnergyMix] = None
 
     # DateTime logic
     last_updated: datetime
     timezone: Optional[str] = Field(None, description="e.g. 'Europe/Oslo'")
+
+    class Config:
+        # This ensures that when we export to JSON,
+        # datetimes are formatted as ISO strings automatically.
+        json_encoders = {
+            datetime: lambda v: v.strftime('%Y-%m-%dT%H:%M:%SZ')
+        }

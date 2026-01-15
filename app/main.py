@@ -106,4 +106,5 @@ def test_location():
     location_obj = Location(**raw_data)
 
     print(location_obj.evses[0].status)
-    print(type(location_obj.last_updated))
+    print(location_obj.last_updated)
+    print(location_obj.model_dump_json())

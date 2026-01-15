@@ -41,6 +41,6 @@ class Connector(OCPIBaseModel):
     power_type: str  # e.g., "AC_3_PHASE"
     voltage: int
     amperage: int
-    tariff_id: Optional[str]
-    terms_and_conditions: Optional[str]
+    tariff_id: Optional[str] = None
+    terms_and_conditions: Optional[str] = None
     last_updated: datetime
