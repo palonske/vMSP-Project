@@ -3,25 +3,17 @@ from datetime import datetime
 from typing import List, Optional
 from enum import Enum
 
-class OCPIBaseModel(BaseModel):
-    class Config:
-        # This ensures that when we export to JSON,
-        # datetimes are formatted as ISO strings automatically.
-        json_encoders = {
-            datetime: lambda v: v.strftime('%Y-%m-%dT%H:%M:%SZ')
-        }
+class DisplayText(BaseModel):
+    language: str
+    text: str
 
-    class DisplayText:
-        language: str
-        text: str
-
-    class Image:
-        url: str
-        thumbnail: str
-        category: ImageCategory
-        type: str
-        width: int
-        height: int
+class Image:
+    url: str
+    thumbnail: str
+    category: ImageCategory
+    type: str
+    width: int
+    height: int
 
 class ImageCategory(str, Enum):
     CHARGER = "CHARGER"
@@ -31,3 +23,13 @@ class ImageCategory(str, Enum):
     OPERATOR = "OPERATOR"
     OTHER = "OTHER"
     OWNER = "OWNER"
+
+
+class OCPIBaseModel(BaseModel):
+    class Config:
+        # This ensures that when we export to JSON,
+        # datetimes are formatted as ISO strings automatically.
+        json_encoders = {
+            datetime: lambda v: v.strftime('%Y-%m-%dT%H:%M:%SZ')
+        }
+

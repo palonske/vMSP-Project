@@ -2,12 +2,12 @@ from datetime import datetime
 from dataclasses import dataclass, field
 from typing import List, Optional
 from enum import Enum
-from base import OCPIBaseModel
+from app.models.base import OCPIBaseModel
 
 # Enums for Type Safety
 
 
-class ConnectorType(Enum):
+class ConnectorType(str, Enum):
     CHADEMO = "CHADEMO"
     DOMESTIC_A = "DOMESTIC_A"
     DOMESTIC_B = "DOMESTIC_B"
@@ -34,7 +34,6 @@ class ConnectorType(Enum):
     TESLA_R = "TESLA_R"
     TESLA_S = "TESLA_S"
 
-@dataclass
 class Connector(OCPIBaseModel):
     id: str
     standard: ConnectorType
@@ -42,5 +41,6 @@ class Connector(OCPIBaseModel):
     power_type: str  # e.g., "AC_3_PHASE"
     voltage: int
     amperage: int
-    terms_and_conditions: str
+    tariff_id: Optional[str]
+    terms_and_conditions: Optional[str]
     last_updated: datetime

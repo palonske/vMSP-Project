@@ -2,8 +2,8 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import List, Optional
 from enum import Enum
-from base import OCPIBaseModel
-from connector import Connector
+from app.models.base import OCPIBaseModel, DisplayText
+from app.models.connector import Connector
 
 # Statuses defined by OCPI 2.1.1
 class Status(str, Enum):
@@ -37,12 +37,12 @@ class EVSE(OCPIBaseModel):
     uid: str = Field(..., description="Internal database ID of the EVSE")
     evse_id: Optional[str] = Field(None, description="Formal ID following ISO 15118")
     status: Status
-    status_schedule: StatusSchedule
-    capabilities: Capability
-    coordinates: GeoLocation
-    physical_reference: str
+    status_schedule: Optional[List['StatusSchedule']]
+    capabilities: Optional[List['Capability']]
+    coordinates: Optional[GeoLocation]
+    physical_reference: Optional[str]
     connectors: List['Connector']
-    directions: OCPIBaseModel.DisplayText
+    directions: Optional[DisplayText]
     floor_level: Optional[str] = None
     coordinates: Optional[dict] = None
     last_updated: datetime

@@ -3,11 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 from enum import Enum
 from app.models.evse import EVSE
-from base import OCPIBaseModel
-
-class DisplayText(BaseModel):
-    language: str  # e.g., "en", "de"
-    text: str
+from app.models.base import OCPIBaseModel, DisplayText
 
 class BusinessDetails(BaseModel):
     name: str
@@ -51,16 +47,16 @@ class Facility(str, Enum):
     FUEL_STATION = "FUEL_STATION"
     WIFI = "WIFI"
 
-class RegularHours:
+class RegularHours(OCPIBaseModel):
     weekday: int
     period_begin: str
     period_end: str
 
-class ExceptionalPeriod:
+class ExceptionalPeriod(OCPIBaseModel):
     period_begin: datetime
     period_end: datetime
 
-class Hours:
+class Hours(OCPIBaseModel):
     regular_hours: RegularHours
     twentyfourseven: bool
     exceptional_openings: ExceptionalPeriod
@@ -78,7 +74,7 @@ class EnergySourceCategory(str, Enum):
     WATER = "WATER"
 
 
-class EnergySource:
+class EnergySource(OCPIBaseModel):
     source: EnergySourceCategory
     percentage: int
 
@@ -88,12 +84,12 @@ class EnvironmentalImpactCategory(str, Enum):
     CARBON_DIOXIDE = "CARBON_DIOXIDE"
 
 
-class EnvironmentalImpact:
+class EnvironmentalImpact(OCPIBaseModel):
     source: EnvironmentalImpactCategory
     amount: int
 
 
-class EnergyMix:
+class EnergyMix(OCPIBaseModel):
     is_green_energy: bool
     energy_sources: EnergySource
     environ_impact: EnvironmentalImpact
@@ -112,17 +108,17 @@ class Location(OCPIBaseModel):
     coordinates: GeoLocation
 
     # Nested Objects
-    related_locations: List[GeoLocation] = []
+    related_locations: Optional[List[GeoLocation]] = []
     evses: List['EVSE'] = []  # Assumes EVSE class is defined
     directions: List[DisplayText] = []
     operator: Optional[BusinessDetails] = None
     suboperator: Optional[BusinessDetails] = None
     owner: Optional[BusinessDetails] = None
     facilities: Optional[Facility]
-    images: List[Image] = []
+    images: Optional[List[Image]] = []
     opening_times: Optional[Hours]
-    charging_when_closed: bool
-    energy_mix: EnergyMix
+    charging_when_closed: Optional[bool]
+    energy_mix: Optional[EnergyMix]
 
     # DateTime logic
     last_updated: datetime
