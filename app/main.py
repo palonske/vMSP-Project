@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 from app.models.location import Location
 from app.models.evse import EVSE
 from app.models.connector import Connector
-from database import engine, create_db_and_tables
+from app.database import engine, create_db_and_tables
 from sqlmodel import Session
 
 app = FastAPI()
@@ -25,6 +25,13 @@ async def root():
     log(message)
     return {"message": message}
 
+@app.get("/testLocationdb")
+async def root():
+    test_location_db()
+    message = "Test Location stored in Database"
+    log(message)
+    return {"message": message}
+
 def main():
     print("Hello from emspprojectv1!")
     test_location()
@@ -37,6 +44,13 @@ def log(string):
 if __name__ == "__main__":
     main()
 
+def fix_date(data_dict):
+    """Helper to convert OCPI date strings to Python datetime objects."""
+    date_str = data_dict.get("last_updated")
+    if date_str and isinstance(date_str, str):
+        # Replace 'Z' with UTC offset so fromisoformat works
+        data_dict["last_updated"] = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+    return data_dict
 
 def test_location_db():
     raw_data = {
@@ -108,19 +122,37 @@ def test_location_db():
         "last_updated": "2015-06-29T20:39:09Z"
     }
 
+    fix_date(raw_data)
+    evses_raw = raw_data.pop("evses", [])
+
     location_obj = Location(**raw_data)
+
+    for e_raw in evses_raw:
+        # Remove connectors from the EVSE dict before creating the object
+        fix_date(e_raw)
+        connectors_raw = e_raw.pop("connectors", [])
+
+        # Create the EVSE object (it now has NO connectors attached)
+        evse_obj = EVSE(**e_raw, location_id=location_obj.id)
+
+        for c_raw in connectors_raw:
+            # Create the Connector object
+            fix_date(c_raw)
+            connector_obj = Connector(**c_raw, evse_uid=evse_obj.uid, location_id=location_obj.id)
+            # Link Connector -> EVSE (Using objects, not dicts!)
+            evse_obj.connectors.append(connector_obj)
+
+        # Link EVSE -> Location (Using objects, not dicts!)
+        location_obj.evses.append(evse_obj)
+
     # Persist it to the database
     with Session(engine) as session:
         session.add(location_obj)  # Stage the object
         session.commit()          # Write to disk
         session.refresh(location_obj) # Get the DB-generated 'id' back into the object
 
-    print(f"Location saved with ID: {location_obj.id}")
+    log(f"Location saved with ID: {location_obj.id}")
 
-def initiate():
-    create_db_and_tables()
-
-    test_location_db()
 
 def test_location():
     raw_data = {

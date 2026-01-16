@@ -55,6 +55,8 @@ class EVSE(OCPIBaseModel, table=True):
 
     location_id: str = Field(foreign_key="location.id")
 
+    location: Optional['Location'] = Relationship(back_populates="evses")
+
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
         populate_by_name=True
