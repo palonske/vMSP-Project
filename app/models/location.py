@@ -1,9 +1,13 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from enum import Enum
-from app.models.evse import EVSE
 from app.models.base import OCPIBaseModel, DisplayText
+from sqlmodel import SQLModel, Field, Column, JSON, Relationship
+
+if TYPE_CHECKING:
+    from app.models.evse import EVSE
+    from app.models.connector import Connector
 
 class BusinessDetails(BaseModel):
     name: str
@@ -47,16 +51,16 @@ class Facility(str, Enum):
     FUEL_STATION = "FUEL_STATION"
     WIFI = "WIFI"
 
-class RegularHours(OCPIBaseModel):
+class RegularHours(BaseModel):
     weekday: int
     period_begin: str
     period_end: str
 
-class ExceptionalPeriod(OCPIBaseModel):
+class ExceptionalPeriod(BaseModel):
     period_begin: datetime
     period_end: datetime
 
-class Hours(OCPIBaseModel):
+class Hours(BaseModel):
     regular_hours: RegularHours
     twentyfourseven: bool
     exceptional_openings: ExceptionalPeriod
@@ -74,7 +78,7 @@ class EnergySourceCategory(str, Enum):
     WATER = "WATER"
 
 
-class EnergySource(OCPIBaseModel):
+class EnergySource(BaseModel):
     source: EnergySourceCategory
     percentage: int
 
@@ -84,12 +88,12 @@ class EnvironmentalImpactCategory(str, Enum):
     CARBON_DIOXIDE = "CARBON_DIOXIDE"
 
 
-class EnvironmentalImpact(OCPIBaseModel):
+class EnvironmentalImpact(BaseModel):
     source: EnvironmentalImpactCategory
     amount: int
 
 
-class EnergyMix(OCPIBaseModel):
+class EnergyMix(BaseModel):
     is_green_energy: bool
     energy_sources: EnergySource
     environ_impact: EnvironmentalImpact
@@ -97,36 +101,34 @@ class EnergyMix(OCPIBaseModel):
     energy_product_name: str
 
 
-class Location(OCPIBaseModel):
-    id: str = Field(..., description="Unique ID for this location")
+class Location(OCPIBaseModel, table=True):
+    id: str = Field(..., description="Unique ID for this location", primary_key=True)
     type: LocationType
     name: Optional[str] = None
     address: str
     city: str
     postal_code: str
     country: str
-    coordinates: GeoLocation
+    coordinates: dict = Field(default={}, sa_column=Column(JSON))
 
     # Nested Objects
-    related_locations: Optional[List[GeoLocation]] = []
-    evses: List['EVSE'] = []  # Assumes EVSE class is defined
-    directions: Optional[List[DisplayText]] = []
-    operator: Optional[BusinessDetails] = None
-    suboperator: Optional[BusinessDetails] = None
-    owner: Optional[BusinessDetails] = None
-    facilities: Optional[Facility] = None
-    images: Optional[List[Image]] = []
-    opening_times: Optional[Hours] = None
-    charging_when_closed: Optional[bool] = None
-    energy_mix: Optional[EnergyMix] = None
+    related_locations: Optional[List[dict]] = Field(default=[], sa_column=Column(JSON))
+    evses: List['EVSE'] = Relationship(back_populates="location")  # Assumes EVSE class is defined
+    directions: Optional[List[dict]] = Field(default=None, sa_column=Column(JSON))
+    operator: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+    suboperator: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+    owner: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+    facilities: Optional[Facility] = Field(default=None)
+    images: Optional[List[dict]] = Field(default=[], sa_column=Column(JSON))
+    opening_times: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+    charging_when_closed: Optional[bool] = Field(default=None)
+    energy_mix: Optional[dict] = Field(default=None, sa_column=Column(JSON))
 
     # DateTime logic
     last_updated: datetime
-    timezone: Optional[str] = Field(None, description="e.g. 'Europe/Oslo'")
+    timezone: Optional[str] = Field(default=None)
 
-    class Config:
-        # This ensures that when we export to JSON,
-        # datetimes are formatted as ISO strings automatically.
-        json_encoders = {
-            datetime: lambda v: v.strftime('%Y-%m-%dT%H:%M:%SZ')
-        }
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        populate_by_name=True
+    )

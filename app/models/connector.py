@@ -1,10 +1,17 @@
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
-from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from enum import Enum
-from app.models.base import OCPIBaseModel
 
-# Enums for Type Safety
+from sqlalchemy import table
+
+from app.models.base import OCPIBaseModel, DisplayText
+from sqlmodel import SQLModel, Field, Column, JSON, Relationship
+
+if TYPE_CHECKING:
+    from app.models.location import Location
+    from app.models.evse import EVSE
+
 
 
 class ConnectorType(str, Enum):
@@ -34,13 +41,23 @@ class ConnectorType(str, Enum):
     TESLA_R = "TESLA_R"
     TESLA_S = "TESLA_S"
 
-class Connector(OCPIBaseModel):
-    id: str
+class Connector(OCPIBaseModel, table=True):
+    id: str = Field(primary_key=True)
     standard: ConnectorType
     format: str  # e.g., "SOCKET", "CABLE"
     power_type: str  # e.g., "AC_3_PHASE"
     voltage: int
     amperage: int
-    tariff_id: Optional[str] = None
-    terms_and_conditions: Optional[str] = None
+    tariff_id: Optional[str] = Field(default=None)
+    terms_and_conditions: Optional[str] = Field(default=None)
     last_updated: datetime
+
+    evse_uid: str = Field(foreign_key="evse.uid")
+    location_id: str = Field(foreign_key="location.id")
+    evse: Optional["EVSE"] = Relationship(back_populates="connectors")
+    location: Optional["Location"] = Relationship()
+
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        populate_by_name=True
+    )

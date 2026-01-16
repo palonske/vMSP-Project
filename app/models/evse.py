@@ -1,9 +1,14 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from enum import Enum
 from app.models.base import OCPIBaseModel, DisplayText
 from app.models.connector import Connector
+from sqlmodel import SQLModel, Field, Column, JSON, Relationship
+
+if TYPE_CHECKING:
+    from app.models.location import Location
+    from app.models.connector import Connector
 
 # Statuses defined by OCPI 2.1.1
 class Status(str, Enum):
@@ -24,33 +29,33 @@ class Capability(str, Enum):
     RFID_READER = "RFID_READER"
     UNLOCK_CAPABLE = "UNLOCK_CAPABLE"
 
-class StatusSchedule(OCPIBaseModel):
+class StatusSchedule(BaseModel):
     period_begin: datetime
     period_end: Optional[datetime] = None
     status: Status
 
-class GeoLocation(OCPIBaseModel):
+class GeoLocation(BaseModel):
     latitude: str
     longitude: str
 
-class EVSE(OCPIBaseModel):
-    uid: str = Field(..., description="Internal database ID of the EVSE")
+class EVSE(OCPIBaseModel, table=True):
+    uid: str = Field(...,
+                     description="Internal database ID of the EVSE",
+                     primary_key=True)
     evse_id: Optional[str] = Field(None, description="Formal ID following ISO 15118")
     status: Status
-    status_schedule: Optional[List['StatusSchedule']] = []
-    capabilities: Optional[List['Capability']] = []
-    coordinates: Optional[GeoLocation] = None
-    physical_reference: Optional[str] = None
-    connectors: List['Connector']
-    directions: Optional[DisplayText] = None
-    floor_level: Optional[str] = None
-    coordinates: Optional[dict] = None
+    status_schedule: Optional[List[dict]] = Field(default=[], sa_column=Column(JSON))
+    capabilities: Optional[List[Capability]] = Field(default=[], sa_column=Column(JSON))
+    coordinates: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+    physical_reference: Optional[str] = Field(default=None,)
+    connectors: List['Connector'] = Relationship(back_populates="evse")
+    directions: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+    floor_level: Optional[str] = Field(default=None,)
     last_updated: datetime
 
-class Config:
-    # This tells Pydantic to allow using the Connector class
-    # even if it's defined later in the file
-    arbitrary_types_allowed = True
-    json_encoders = {
-        datetime: lambda v: v.strftime('%Y-%m-%dT%H:%M:%SZ')
-    }
+    location_id: str = Field(foreign_key="location.id")
+
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        populate_by_name=True
+    )

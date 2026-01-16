@@ -2,8 +2,9 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import List, Optional
 from enum import Enum
+from sqlmodel import SQLModel
 
-class DisplayText(BaseModel):
+class DisplayText(SQLModel):
     language: str
     text: str
 
@@ -25,7 +26,7 @@ class ImageCategory(str, Enum):
     OWNER = "OWNER"
 
 
-class OCPIBaseModel(BaseModel):
+class OCPIBaseModel(SQLModel):
     class Config:
         # This ensures that when we export to JSON,
         # datetimes are formatted as ISO strings automatically.
