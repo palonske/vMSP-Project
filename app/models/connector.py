@@ -6,7 +6,7 @@ from enum import Enum
 from sqlalchemy import table
 
 from app.models.base import OCPIBaseModel, DisplayText
-from sqlmodel import SQLModel, Field, Column, JSON, Relationship
+from sqlmodel import SQLModel, Field, Column, JSON, Relationship, Enum as SQLEnum
 
 if TYPE_CHECKING:
     from app.models.location import Location
@@ -43,7 +43,7 @@ class ConnectorType(str, Enum):
 
 class Connector(OCPIBaseModel, table=True):
     id: str = Field(primary_key=True)
-    standard: ConnectorType
+    standard: ConnectorType = Field(sa_column=Column(SQLEnum(ConnectorType)))
     format: str  # e.g., "SOCKET", "CABLE"
     power_type: str  # e.g., "AC_3_PHASE"
     voltage: int
@@ -52,7 +52,7 @@ class Connector(OCPIBaseModel, table=True):
     terms_and_conditions: Optional[str] = Field(default=None)
     last_updated: datetime
 
-    evse_uid: str = Field(foreign_key="evse.uid")
+    evse_uid: str = Field(foreign_key="evse.uid", primary_key=True)
     location_id: str = Field(foreign_key="location.id")
     evse: Optional["EVSE"] = Relationship(back_populates="connectors")
     location: Optional["Location"] = Relationship()

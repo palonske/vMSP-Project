@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict, field_serializer
 from datetime import datetime
 from typing import List, Optional
 from enum import Enum
@@ -27,10 +27,21 @@ class ImageCategory(str, Enum):
 
 
 class OCPIBaseModel(SQLModel):
-    class Config:
-        # This ensures that when we export to JSON,
-        # datetimes are formatted as ISO strings automatically.
-        json_encoders = {
-            datetime: lambda v: v.strftime('%Y-%m-%dT%H:%M:%SZ')
-        }
+    model_config = ConfigDict(
+        validate_assignment=True,
+        from_attributes=True
+    )
+
+    @field_serializer("*", mode="wrap")
+    @classmethod
+    def serialize_dt(cls, value, handler):
+        """
+        Global serializer that finds any datetime
+        and ensures it ends with 'Z' for OCPI.
+        """
+        result = handler(value)
+        if isinstance(value, datetime):
+            return value.strftime('%Y-%m-%dT%H:%M:%SZ')
+        return result
+
 

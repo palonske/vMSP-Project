@@ -8,9 +8,15 @@ from app.models.evse import EVSE
 from app.models.connector import Connector
 from app.database import engine, create_db_and_tables
 from sqlmodel import Session
+from app.api.v2_1_1 import locations
 
-app = FastAPI()
+app = FastAPI(title="OCPI Platform")
 
+app.include_router(
+    locations.router,
+    prefix="/ocpi/emsp/2.1.1/locations",
+    tags=["Locations v2.1.1"]
+)
 
 @app.get("/")
 async def root():

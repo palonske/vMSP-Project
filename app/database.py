@@ -1,4 +1,5 @@
-from sqlmodel import SQLModel, create_engine
+from sqlmodel import SQLModel, create_engine, Session
+import os
 
 # 1. IMPORT EVERYTHING
 # This registers the tables in SQLModel's metadata registry
@@ -16,8 +17,17 @@ engine = create_engine(sqlite_url, echo=True)
 def create_db_and_tables():
     print("Creating database and tables...")
     # 3. GENERATE
+    if os.path.exists(sqlite_file_name):
+        os.remove(sqlite_file_name)
+        print(f"Deleted old {sqlite_file_name}")
+
+    print("Creating fresh tables...")
     SQLModel.metadata.create_all(engine)
     print("Done!")
+
+def get_session():
+    with Session(engine) as session:
+        yield session
 
 if __name__ == "__main__":
     create_db_and_tables()

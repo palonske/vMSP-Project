@@ -4,7 +4,7 @@ from typing import List, Optional, TYPE_CHECKING
 from enum import Enum
 from app.models.base import OCPIBaseModel, DisplayText
 from app.models.connector import Connector
-from sqlmodel import SQLModel, Field, Column, JSON, Relationship
+from sqlmodel import SQLModel, Field, Column, JSON, Relationship, Enum as SQLEnum
 
 if TYPE_CHECKING:
     from app.models.location import Location
@@ -20,6 +20,8 @@ class Status(str, Enum):
     PLANNED = "PLANNED"
     REMOVED = "REMOVED"
     RESERVED = "RESERVED"
+    UNKNOWN = "UNKNOWN"
+    IDLING = "IDLING"
 
 class Capability(str, Enum):
     CHARGING_PROFILE_CAPABLE = "CHARGING_PROFILE_CAPABLE"
@@ -43,7 +45,7 @@ class EVSE(OCPIBaseModel, table=True):
                      description="Internal database ID of the EVSE",
                      primary_key=True)
     evse_id: Optional[str] = Field(None, description="Formal ID following ISO 15118")
-    status: Status
+    status: Status = Field(sa_column=Column(SQLEnum(Status)))
     status_schedule: Optional[List[dict]] = Field(default=[], sa_column=Column(JSON))
     capabilities: Optional[List[Capability]] = Field(default=[], sa_column=Column(JSON))
     coordinates: Optional[dict] = Field(default=None, sa_column=Column(JSON))

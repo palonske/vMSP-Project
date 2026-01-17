@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional, TYPE_CHECKING
 from enum import Enum
 from app.models.base import OCPIBaseModel, DisplayText
-from sqlmodel import SQLModel, Field, Column, JSON, Relationship
+from sqlmodel import SQLModel, Field, Column, JSON, Relationship, Enum as SQLEnum
 
 if TYPE_CHECKING:
     from app.models.evse import EVSE
@@ -103,13 +103,15 @@ class EnergyMix(BaseModel):
 
 class Location(OCPIBaseModel, table=True):
     id: str = Field(..., description="Unique ID for this location", primary_key=True)
-    type: LocationType
+    type: LocationType = Field(sa_column=Column(SQLEnum(LocationType)))
     name: Optional[str] = None
     address: str
     city: str
     postal_code: str
     country: str
     coordinates: dict = Field(default={}, sa_column=Column(JSON))
+    country_code: str
+    party_id: str
 
     # Nested Objects
     related_locations: Optional[List[dict]] = Field(default=[], sa_column=Column(JSON))
@@ -118,7 +120,7 @@ class Location(OCPIBaseModel, table=True):
     operator: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     suboperator: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     owner: Optional[dict] = Field(default=None, sa_column=Column(JSON))
-    facilities: Optional[Facility] = Field(default=None)
+    facilities: Optional[Facility] = Field(default=None, sa_column=Column(JSON))
     images: Optional[List[dict]] = Field(default=[], sa_column=Column(JSON))
     opening_times: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     charging_when_closed: Optional[bool] = Field(default=None)
