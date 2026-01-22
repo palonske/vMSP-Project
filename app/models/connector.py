@@ -40,6 +40,7 @@ class ConnectorType(str, Enum):
     IEC_62196_T3C = "IEC_62196_T3C"
     TESLA_R = "TESLA_R"
     TESLA_S = "TESLA_S"
+    UNSPECIFIC = "UNSPECIFIC"
 
 class Connector(OCPIBaseModel, table=True):
     id: str = Field(primary_key=True)

@@ -31,6 +31,7 @@ class LocationType(str, Enum):
     UNDERGROUND_GARAGE = "UNDERGROUND_GARAGE"
     PARKING_LOT = "PARKING_LOT"
     OTHER = "OTHER"
+    UNKNOWN = "UNKNOWN"
 
 
 class Facility(str, Enum):
@@ -120,7 +121,7 @@ class Location(OCPIBaseModel, table=True):
     operator: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     suboperator: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     owner: Optional[dict] = Field(default=None, sa_column=Column(JSON))
-    facilities: Optional[Facility] = Field(default=None, sa_column=Column(JSON))
+    facilities: Optional[List[Facility]] = Field(default=[], sa_column=Column(JSON))
     images: Optional[List[dict]] = Field(default=[], sa_column=Column(JSON))
     opening_times: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     charging_when_closed: Optional[bool] = Field(default=None)

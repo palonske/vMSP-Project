@@ -42,10 +42,16 @@ class OCPISyncService:
                 # 2. Process each location in the current page
                 for loc_raw in locations_data:
                     location_id = loc_raw.get("id")
-                    if not location_id:
-                        continue
+                    try:
+                        if not location_id:
+                            print(f"⚠️ Skipping location: Missing ID in raw data.")
+                            continue
 
-                    await process_and_save_location(loc_raw, cpo, location_id, session)
+                        await process_and_save_location(loc_raw, cpo, location_id, session)
+
+                    except Exception as e:
+                        print(f"❌ Error processing location {loc_raw.get('id', 'Unknown')}: {e}")
+                        continue
 
                 # 3. Handle OCPI Pagination
                 # OCPI uses the 'Link' header for the next page: <url>; rel="next"

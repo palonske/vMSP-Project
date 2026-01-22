@@ -30,6 +30,8 @@ class Capability(str, Enum):
     RESERVABLE = "RESERVABLE"
     RFID_READER = "RFID_READER"
     UNLOCK_CAPABLE = "UNLOCK_CAPABLE"
+    ISO_15118_2_PLUG_AND_CHARGE = "ISO_15118_2_PLUG_AND_CHARGE"
+    ISO_15118_20_PLUG_AND_CHARGE = "ISO_15118_20_PLUG_AND_CHARGE"
 
 class StatusSchedule(BaseModel):
     period_begin: datetime
