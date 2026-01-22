@@ -41,6 +41,7 @@ class ConnectorType(str, Enum):
     TESLA_R = "TESLA_R"
     TESLA_S = "TESLA_S"
     UNSPECIFIC = "UNSPECIFIC"
+    SAE_J3400 = "SAE_J3400"
 
 class Connector(OCPIBaseModel, table=True):
     id: str = Field(primary_key=True)

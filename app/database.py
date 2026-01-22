@@ -12,7 +12,7 @@ sqlite_file_name = "database.db"
 sqlite_url = f"sqlite:////Users/ericpalonsky/IdeaProjects/emspProjectv1/app/{sqlite_file_name}"
 
 # echo=True prints the SQL to your terminal so you can see the tables being created
-engine = create_engine(sqlite_url, echo=True)
+engine = create_engine(sqlite_url, echo=False)
 
 def create_db_and_tables():
     print("Creating database and tables...")

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from datetime import datetime
 from typing import List, Optional, TYPE_CHECKING
 from enum import Enum
@@ -32,6 +32,8 @@ class Capability(str, Enum):
     UNLOCK_CAPABLE = "UNLOCK_CAPABLE"
     ISO_15118_2_PLUG_AND_CHARGE = "ISO_15118_2_PLUG_AND_CHARGE"
     ISO_15118_20_PLUG_AND_CHARGE = "ISO_15118_20_PLUG_AND_CHARGE"
+    IEC_15118_2_PLUG_AND_CHARGE = "IEC_15118_2_PLUG_AND_CHARGE"
+    IEC_15118_20_PLUG_AND_CHARGE = "IEC_15118_20_PLUG_AND_CHARGE"
 
 class StatusSchedule(BaseModel):
     period_begin: datetime
@@ -50,14 +52,30 @@ class EVSE(OCPIBaseModel, table=True):
     status: Status = Field(sa_column=Column(SQLEnum(Status)))
     status_schedule: Optional[List[dict]] = Field(default=[], sa_column=Column(JSON))
     capabilities: Optional[List[Capability]] = Field(default=[], sa_column=Column(JSON))
+
+    @field_validator("capabilities", mode ="before")
+    @classmethod
+    def map_iec_to_iso(clscls, v):
+        if not isinstance(v, list):
+            return v
+
+        # Mapping dictionary for non-standard values
+        mapping = {
+            "IEC_15118_2_PLUG_AND_CHARGE": "ISO_15118_2_PLUG_AND_CHARGE",
+            "IEC_15118_20_PLUG_AND_CHARGE": "ISO_15118_20_PLUG_AND_CHARGE"
+        }
+
+        # Return a new list where IEC is replaced by ISO
+        return [mapping.get(item, item) for item in v]
+
     coordinates: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     physical_reference: Optional[str] = Field(default=None,)
-    connectors: List['Connector'] = Relationship(back_populates="evse")
+    connectors: List['Connector'] = Relationship(back_populates="evse",  sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     directions: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     floor_level: Optional[str] = Field(default=None,)
     last_updated: datetime
 
-    location_id: str = Field(foreign_key="location.id")
+    location_id: str = Field(foreign_key="location.id", primary_key=True)
 
     location: Optional['Location'] = Relationship(back_populates="evses")
 

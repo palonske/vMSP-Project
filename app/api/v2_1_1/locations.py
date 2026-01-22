@@ -33,42 +33,44 @@ def process_location(        country_code: str,
         print(f"Skipping invalid location data: {e}")
 
     # 1. Clean up existing data (Standard OCPI PUT replaces the resource)
-    existing_loc = session.get(Location, location_id)
+    existing_loc = session.exec(
+        select(Location).where(
+            Location.id == location_id,
+            Location.country_code == country_code,
+            Location.party_id == party_id
+        )
+    ).first()
+
     if existing_loc:
         session.delete(existing_loc)
-        session.commit()
+        session.flush()
+        session.expunge(existing_loc)
 
     # 2. Re-use your successful "Tree Building" logic
-    try:
-        fix_date(raw_data)
-        evses_raw = raw_data.pop("evses", [])
-        location_obj = Location(**raw_data)
+    fix_date(raw_data)
+    evses_raw = raw_data.pop("evses", [])
+    location_obj = Location(**raw_data)
 
-        for e_raw in evses_raw:
-            fix_date(e_raw)
-            connectors_raw = e_raw.pop("connectors", [])
-            evse_obj = EVSE(**e_raw, location_id=location_obj.id)
+    for e_raw in evses_raw:
+        fix_date(e_raw)
+        connectors_raw = e_raw.pop("connectors", [])
+        evse_obj = EVSE(**e_raw, location_id=location_obj.id)
 
-            for c_raw in connectors_raw:
-                fix_date(c_raw)
-                connector_obj = Connector(
-                    **c_raw,
-                    evse_uid=evse_obj.uid,
-                    location_id=location_obj.id
-                )
-                evse_obj.connectors.append(connector_obj)
+        for c_raw in connectors_raw:
+            fix_date(c_raw)
+            connector_obj = Connector(
+                **c_raw,
+                evse_uid=evse_obj.uid,
+                location_id=location_obj.id
+            )
+            evse_obj.connectors.append(connector_obj)
 
-            location_obj.evses.append(evse_obj)
+        location_obj.evses.append(evse_obj)
 
-        session.add(location_obj)
-        session.commit()
-        session.refresh(location_obj)
+    session.add(location_obj)
+    session.flush()
 
-        return {"status_code": 1000, "status_message": "Success", "data": [location_obj.id]}
-
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+    return {"status_code": 1000, "status_message": "Success", "data": [location_obj.id]}
 
 # --- GET ALL LOCATIONS ---
 @router.get("/", response_model=dict)
@@ -176,10 +178,13 @@ async def put_location(
         raw_data: dict,
         session: Session = Depends(get_session)
 ):
-    response_json =     process_location(country_code, party_id, location_id, raw_data, session)
 
-
-    return response_json
+    try:
+        response_json =     process_location(country_code, party_id, location_id, raw_data, session)
+        return response_json
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.patch("/{country_code}/{party_id}/{location_id}")

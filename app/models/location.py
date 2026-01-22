@@ -116,7 +116,7 @@ class Location(OCPIBaseModel, table=True):
 
     # Nested Objects
     related_locations: Optional[List[dict]] = Field(default=[], sa_column=Column(JSON))
-    evses: List['EVSE'] = Relationship(back_populates="location")  # Assumes EVSE class is defined
+    evses: List['EVSE'] = Relationship(back_populates="location", sa_relationship_kwargs={"cascade": "all, delete-orphan"})  # Assumes EVSE class is defined
     directions: Optional[List[dict]] = Field(default=None, sa_column=Column(JSON))
     operator: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     suboperator: Optional[dict] = Field(default=None, sa_column=Column(JSON))
