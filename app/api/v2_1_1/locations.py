@@ -16,6 +16,60 @@ def fix_date(data_dict):
         data_dict["last_updated"] = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
     return data_dict
 
+def process_location(        country_code: str,
+                                    party_id: str,
+                                    location_id: str,
+                                    raw_data: dict,
+                                    session: Session = Depends(get_session)):
+    # 0. Inject the country_code and party_id into the dictionary.
+    raw_data["country_code"] = country_code
+    raw_data["party_id"] = party_id
+
+    try:
+        # This validates the raw JSON from the CPO against your Pydantic model
+        validated_loc = LocationRead.model_validate(raw_data)
+        location_id = validated_loc.id
+    except ValidationError as e:
+        print(f"Skipping invalid location data: {e}")
+
+    # 1. Clean up existing data (Standard OCPI PUT replaces the resource)
+    existing_loc = session.get(Location, location_id)
+    if existing_loc:
+        session.delete(existing_loc)
+        session.commit()
+
+    # 2. Re-use your successful "Tree Building" logic
+    try:
+        fix_date(raw_data)
+        evses_raw = raw_data.pop("evses", [])
+        location_obj = Location(**raw_data)
+
+        for e_raw in evses_raw:
+            fix_date(e_raw)
+            connectors_raw = e_raw.pop("connectors", [])
+            evse_obj = EVSE(**e_raw, location_id=location_obj.id)
+
+            for c_raw in connectors_raw:
+                fix_date(c_raw)
+                connector_obj = Connector(
+                    **c_raw,
+                    evse_uid=evse_obj.uid,
+                    location_id=location_obj.id
+                )
+                evse_obj.connectors.append(connector_obj)
+
+            location_obj.evses.append(evse_obj)
+
+        session.add(location_obj)
+        session.commit()
+        session.refresh(location_obj)
+
+        return {"status_code": 1000, "status_message": "Success", "data": [location_obj.id]}
+
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+
 # --- GET ALL LOCATIONS ---
 @router.get("/", response_model=dict)
 async def get_locations(session: Session = Depends(get_session)):
@@ -77,7 +131,7 @@ async def get_location(
         "data": data_as_schema  # <-- LocationRead will now see 'evses'
     }
 
-# --- GET SPECIFIC LOCATION ---
+# --- GET SPECIFIC EVSE ---
 @router.get("/{country_code}/{party_id}/{location_id}/{evse_uid}", response_model=dict)
 async def get_evse(
         country_code: str,
@@ -122,48 +176,10 @@ async def put_location(
         raw_data: dict,
         session: Session = Depends(get_session)
 ):
+    response_json =     process_location(country_code, party_id, location_id, raw_data, session)
 
-    # 0. Inject the country_code and party_id into the dictionary.
-    raw_data["country_code"] = country_code
-    raw_data["party_id"] = party_id
 
-    # 1. Clean up existing data (Standard OCPI PUT replaces the resource)
-    existing_loc = session.get(Location, location_id)
-    if existing_loc:
-        session.delete(existing_loc)
-        session.commit()
-
-    # 2. Re-use your successful "Tree Building" logic
-    try:
-        fix_date(raw_data)
-        evses_raw = raw_data.pop("evses", [])
-        location_obj = Location(**raw_data)
-
-        for e_raw in evses_raw:
-            fix_date(e_raw)
-            connectors_raw = e_raw.pop("connectors", [])
-            evse_obj = EVSE(**e_raw, location_id=location_obj.id)
-
-            for c_raw in connectors_raw:
-                fix_date(c_raw)
-                connector_obj = Connector(
-                    **c_raw,
-                    evse_uid=evse_obj.uid,
-                    location_id=location_obj.id
-                )
-                evse_obj.connectors.append(connector_obj)
-
-            location_obj.evses.append(evse_obj)
-
-        session.add(location_obj)
-        session.commit()
-        session.refresh(location_obj)
-
-        return {"status_code": 1000, "status_message": "Success", "data": [location_obj.id]}
-
-    except Exception as e:
-        session.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+    return response_json
 
 
 @router.patch("/{country_code}/{party_id}/{location_id}")
