@@ -14,44 +14,66 @@ class OCPISyncService:
         statement = select(PartnerProfile).where(PartnerProfile.role == PartnerRole.CPO)
         cpos = self.session.exec(statement).all()
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=60.0) as client:
             for cpo in cpos:
                 print(f"Starting sync for: {cpo.party_id}")
-                await self.sync_single_cpo(client, cpo)
+                await self.sync_single_cpo(client, cpo, self.session)
 
-    async def sync_single_cpo(self, client: httpx.AsyncClient, cpo: PartnerProfile):
-        # 2. Get the Locations endpoint (In a real app, you'd fetch this from the Versions URL)
-        # For now, let's assume you've stored the specific locations_url in the profile
-        locations_url = f"{cpo.versions_url}/locations"
+    async def sync_single_cpo(self, client: httpx.AsyncClient, cpo: PartnerProfile, session: Session):
+        # 1. Start with the base locations URL from the profile
+        # Note: OCPI paths usually end in /locations
+        print(f"Calling CPO with versions_url base:  {cpo.versions_url}")
+        next_url = f"{cpo.versions_url.rstrip('/')}/locations"
 
         headers = {
             "Authorization": f"Token {cpo.token_c}",
             "Content-Type": "application/json"
         }
 
-        try:
-            response = await client.get(locations_url, headers=headers)
-            response.raise_for_status()
-            payload = response.json()
+        while next_url:
+            print(f"Fetching: {next_url}")
+            try:
+                response = await client.get(next_url, headers=headers)
+                response.raise_for_status()
 
-            # OCPI data is usually in the 'data' field
-            locations_data = payload.get("data", [])
+                payload = response.json()
+                locations_data = payload.get("data", [])
 
-            for loc_raw in locations_data:
-                # 3. Use the logic we built earlier to inject country/party and save
-                # We pass the session and the raw data to your processing function
-                await self.process_and_save_location(loc_raw, cpo, self.session)
+                # 2. Process each location in the current page
+                for loc_raw in locations_data:
+                    location_id = loc_raw.get("id")
+                    if not location_id:
+                        continue
 
-            print(f"Successfully synced {len(locations_data)} locations for {cpo.party_id}")
+                    await process_and_save_location(loc_raw, cpo, location_id, session)
 
-        except Exception as e:
-            print(f"Failed to sync {cpo.party_id}: {str(e)}")
+                # 3. Handle OCPI Pagination
+                # OCPI uses the 'Link' header for the next page: <url>; rel="next"
+                next_url = parse_next_link(response.headers.get("Link"))
 
-    async def process_and_save_location(self, raw_data: dict, cpo: PartnerProfile, session: Session):
-        # Inject the ownership codes from the Profile
-        raw_data["country_code"] = cpo.country_code
-        raw_data["party_id"] = cpo.party_id
+                # Commit after every page to keep transactions manageable
+                session.commit()
 
-        loc_id = raw_data.get("id")
+            except httpx.HTTPStatusError as e:
+                print(f"HTTP Error for {cpo.party_id}: {e.response.status_code}")
+                break
+            except Exception as e:
+                print(f"Unexpected error syncing {cpo.party_id}: {e}")
+                break
 
-        process_location(cpo.country_code, cpo.party_id, loc_id, raw_data, session)
+def parse_next_link(link_header: str):
+    """Parses 'Link: <url>; rel="next"' header"""
+    if not link_header:
+        return None
+    parts = link_header.split(",")
+    for part in parts:
+        if 'rel="next"' in part:
+            return part.strip().split(";")[0].strip("<>")
+    return None
+
+async def process_and_save_location(raw_data: dict, cpo: PartnerProfile, loc_id, session: Session):
+    # Inject the ownership codes from the Profile
+    raw_data["country_code"] = cpo.country_code
+    raw_data["party_id"] = cpo.party_id
+
+    process_location(cpo.country_code, cpo.party_id, loc_id, raw_data, session)

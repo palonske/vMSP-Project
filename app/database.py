@@ -9,7 +9,7 @@ from app.models.connector import Connector
 
 # 2. SETUP ENGINE
 sqlite_file_name = "database.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
+sqlite_url = f"sqlite:////Users/ericpalonsky/IdeaProjects/emspProjectv1/app/{sqlite_file_name}"
 
 # echo=True prints the SQL to your terminal so you can see the tables being created
 engine = create_engine(sqlite_url, echo=True)
