@@ -43,6 +43,44 @@ class EVSEUpdate(OCPIBaseModel):
     # This MUST be the Enum class, not 'str'
     status: Optional[Status] = None
 
+
+from typing import List, Optional
+from datetime import datetime
+from pydantic import BaseModel, Field
+
+class PriceComponentRead(BaseModel):
+    type: str  # ENERGY, FLAT, PARKING_TIME, TIME
+    price: float
+    vat: Optional[float] = None
+    step_size: int
+
+class TariffRestrictionRead(BaseModel):
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    min_kwh: Optional[float] = None
+    max_kwh: Optional[float] = None
+    min_current: Optional[float] = None
+    max_current: Optional[float] = None
+    min_power: Optional[float] = None
+    max_power: Optional[float] = None
+    min_duration: Optional[int] = None
+    max_duration: Optional[int] = None
+    day_of_week: List[str] = []
+
+class TariffElementRead(BaseModel):
+    price_components: List[PriceComponentRead]
+    restrictions: Optional[TariffRestrictionRead] = None
+
+class TariffRead(BaseModel):
+    id: str
+    currency: str
+    type: Optional[str] = None
+    elements: List[TariffElementRead]
+    last_updated: datetime
+
 ConnectorRead.model_rebuild()
 EVSERead.model_rebuild()
 LocationRead.model_rebuild()
+TariffRead.model_rebuild()
