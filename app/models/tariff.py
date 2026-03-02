@@ -4,7 +4,7 @@ from datetime import datetime
 
 from sqlalchemy import Column, JSON
 from sqlmodel import SQLModel, Field, Relationship
-from base import OCPIBaseModel
+from app.models.base import OCPIBaseModel
 
 class TariffType(str, Enum):
     AD_HOC_PAYMENT = "AD_HOC_PAYMENT"
@@ -88,7 +88,7 @@ class Tariff(OCPIBaseModel, table=True):
 
     tariff_alt_text: Optional[str] = None
     tariff_alt_url: Optional[str] = None
-    energy_mix: Optional[dict] = None
+    energy_mix: Optional[dict] = Field(default=None, sa_column=Column(JSON))
 
     currency: str  # e.g., "EUR", "USD"
     type: Optional[TariffType] = None

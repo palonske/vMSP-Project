@@ -1,5 +1,6 @@
 import httpx
 from rich.diagnose import report
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from sqlmodel import select
 from app.models.partner import PartnerProfile, PartnerRole
@@ -7,20 +8,21 @@ from app.models.location import Location
 from app.api.v2_1_1.locations import process_location
 
 class OCPISyncService:
-    def __init__(self, session: Session):
+    def __init__(self, session: AsyncSession):
         self.session = session
 
     async def sync_all_cpos(self):
         # 1. Find all active CPOs
         statement = select(PartnerProfile).where(PartnerProfile.role == PartnerRole.CPO)
-        cpos = self.session.exec(statement).all()
+        result = await self.session.execute(statement)
+        cpos = result.scalars().all()
 
         async with httpx.AsyncClient(timeout=60.0) as client:
             for cpo in cpos:
                 print(f"Starting sync for: {cpo.party_id}")
                 await self.sync_single_cpo(client, cpo, self.session)
 
-    async def sync_single_cpo(self, client: httpx.AsyncClient, cpo: PartnerProfile, session: Session):
+    async def sync_single_cpo(self, client: httpx.AsyncClient, cpo: PartnerProfile, session: AsyncSession):
         report = {
             "cpo": f"{cpo.country_code}-{cpo.party_id}",
             "total_received": 0,
@@ -38,6 +40,11 @@ class OCPISyncService:
             "Authorization": f"Token {cpo.token_c}",
             "Content-Type": "application/json"
         }
+
+        cpo_profile = PartnerProfile(
+            country_code=cpo.country_code,
+            party_id=cpo.party_id
+        )
 
         while next_url:
             print(f"Fetching: {next_url}")
@@ -57,8 +64,8 @@ class OCPISyncService:
                             print(f"⚠️ Skipping location: Missing ID in raw data.")
                             continue
 
-                        with session.begin_nested():
-                            await process_and_save_location(loc_raw, cpo, location_id, session)
+                        async with self.session.begin_nested():
+                            await process_and_save_location(loc_raw, cpo, location_id, self.session)
                             report["success_count"] += 1
 
                     except Exception as e:
@@ -83,7 +90,7 @@ class OCPISyncService:
 
 
                 # Commit after every page to keep transactions manageable
-                session.commit()
+                await session.commit()
 
             except httpx.HTTPStatusError as e:
                 print(f"HTTP Error for {cpo.party_id}: {e.response.status_code}")
@@ -92,7 +99,7 @@ class OCPISyncService:
                 print(f"Unexpected error syncing {cpo.party_id}: {e}")
                 break
 
-        print_sync_summary(self,report)
+        print_sync_summary(report)
 
 
 
@@ -106,7 +113,7 @@ def parse_next_link(link_header: str):
             return part.strip().split(";")[0].strip("<>")
     return None
 
-def print_sync_summary(self, report):
+def print_sync_summary(report):
     print("\n" + "="*40)
     print(f"SYNC SUMMARY: {report['cpo']}")
     print(f"Total Processed: {report['total_received']}")
@@ -123,9 +130,9 @@ def print_sync_summary(self, report):
             print(f"... and {len(report['errors']) - 10} more errors.")
     print("="*40 + "\n")
 
-async def process_and_save_location(raw_data: dict, cpo: PartnerProfile, loc_id, session: Session):
+async def process_and_save_location(raw_data: dict, cpo: PartnerProfile, loc_id, session: AsyncSession):
     # Inject the ownership codes from the Profile
     raw_data["country_code"] = cpo.country_code
     raw_data["party_id"] = cpo.party_id
 
-    process_location(cpo.country_code, cpo.party_id, loc_id, raw_data, session)
+    await process_location(raw_data, cpo, session)

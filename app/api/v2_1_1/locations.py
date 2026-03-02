@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import ValidationError
-from sqlalchemy.orm import joinedload
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, select
 from app.database import engine, get_session
-from app.models import Location, EVSE, Connector
+from app.models import Location, EVSE, Connector, PartnerProfile
 from datetime import datetime
 from app.api.v2_1_1.schemas import LocationRead, EVSERead, ConnectorRead, EVSEUpdate
 
@@ -16,34 +17,29 @@ def fix_date(data_dict):
         data_dict["last_updated"] = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
     return data_dict
 
-def process_location(        country_code: str,
-                                    party_id: str,
-                                    location_id: str,
-                                    raw_data: dict,
-                                    session: Session = Depends(get_session)):
-    # 0. Inject the country_code and party_id into the dictionary.
-    raw_data["country_code"] = country_code
-    raw_data["party_id"] = party_id
+async def process_location(raw_data: dict, cpo: PartnerProfile, session: AsyncSession):
+    raw_data["country_code"] = cpo.country_code
+    raw_data["party_id"] = cpo.party_id
 
     try:
-        # This validates the raw JSON from the CPO against your Pydantic model
         validated_loc = LocationRead.model_validate(raw_data)
         location_id = validated_loc.id
     except ValidationError as e:
         print(f"Skipping invalid location data: {e}")
+        raise e
 
-    # 1. Clean up existing data (Standard OCPI PUT replaces the resource)
-    existing_loc = session.exec(
-        select(Location).where(
-            Location.id == location_id,
-            Location.country_code == country_code,
-            Location.party_id == party_id
-        )
-    ).first()
+    # Await the query
+    statement = select(Location).where(
+        Location.id == location_id,
+        Location.country_code == cpo.country_code,
+        Location.party_id == cpo.party_id
+    )
+    result = await session.execute(statement)
+    existing_loc = result.scalars().first()
 
     if existing_loc:
-        session.delete(existing_loc)
-        session.flush()
+        await session.delete(existing_loc)
+        await session.flush()
         session.expunge(existing_loc)
 
     # 2. Re-use your successful "Tree Building" logic
@@ -68,22 +64,22 @@ def process_location(        country_code: str,
         location_obj.evses.append(evse_obj)
 
     session.add(location_obj)
-    session.flush()
+    await session.flush()
 
     return {"status_code": 1000, "status_message": "Success", "data": [location_obj.id]}
 
 # --- GET ALL LOCATIONS ---
 @router.get("/", response_model=dict)
-async def get_locations(session: Session = Depends(get_session)):
+async def get_locations(session: AsyncSession = Depends(get_session)):
     # Select all location records
     statement = (
         select(Location)
         .options(
-            joinedload(Location.evses)
-            .joinedload(EVSE.connectors)
+            selectinload(Location.evses).selectinload(EVSE.connectors)
         )
     )
-    locations = session.exec(statement).unique().all()
+    result = await session.execute(statement)
+    locations = result.unique().all()
 
     data_as_schema = [LocationRead.model_validate(loc) for loc in locations]
 
@@ -100,7 +96,7 @@ async def get_location(
         country_code: str,
         party_id: str,
         location_id: str,
-        session: Session = Depends(get_session)
+        session: AsyncSession = Depends(get_session)
 ):
     # Use joinedload to ensure the data is fetched from the DB
     statement = (
@@ -112,7 +108,7 @@ async def get_location(
         )
     )
 
-    location = session.exec(statement).unique().first()
+    location = session.execute(statement).unique().first()
 
     print(f"DEBUG: Found Location {location.id}")
     print(f"DEBUG: Number of EVSEs found: {len(location.evses)}")
@@ -140,7 +136,7 @@ async def get_evse(
         party_id: str,
         location_id: str,
         evse_uid: str,
-        session: Session = Depends(get_session)
+        session: AsyncSession = Depends(get_session)
 ):
     # Use joinedload to ensure the data is fetched from the DB
     statement = (
@@ -152,7 +148,7 @@ async def get_evse(
         )
     )
 
-    evse = session.exec(statement).unique().first()
+    evse = session.execute(statement).unique().first()
 
     print(f"DEBUG: Found EVSE {evse.uid}")
 
@@ -176,14 +172,15 @@ async def put_location(
         party_id: str,
         location_id: str,
         raw_data: dict,
-        session: Session = Depends(get_session)
+        session: AsyncSession = Depends(get_session)
 ):
 
     try:
-        response_json =     process_location(country_code, party_id, location_id, raw_data, session)
+        cpo = PartnerProfile(country_code=country_code, party_id=party_id)
+        response_json =     process_location(raw_data, cpo, session)
         return response_json
     except Exception as e:
-        session.rollback()
+        await session.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -193,7 +190,7 @@ async def patch_location(
         party_id: str,
         location_id: str,
         patch_data: dict,
-        session: Session = Depends(get_session)
+        session: AsyncSession = Depends(get_session)
 ):
     # 1. Get the existing location
     db_location = session.get(Location, location_id)
@@ -240,13 +237,13 @@ async def patch_location(
                                             c_value = datetime.fromisoformat(c_value.replace("Z", "+00:00"))
                                         setattr(db_conn, c_key, c_value)
     except Exception as e:
-        session.rollback()
+        await session.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
     # 4. Save changes
     session.add(db_location)
-    session.commit()
-    session.refresh(db_location)
+    await session.commit()
+    await session.refresh(db_location)
 
     return {
         "status_code": 1000,
@@ -261,11 +258,11 @@ async def patch_evse(
         location_id: str,
         evse_uid: str,
         patch_data: dict,
-        session: Session = Depends(get_session)
+        session: AsyncSession = Depends(get_session)
 ):
     # 1. Fetch the specific EVSE and verify it belongs to the Location
     statement = select(EVSE).where(EVSE.uid == evse_uid, EVSE.location_id == location_id)
-    db_evse = session.exec(statement).first()
+    db_evse = session.execute(statement).first()
 
     if not db_evse:
         raise HTTPException(status_code=404, detail="EVSE not found for this location")
@@ -292,7 +289,7 @@ async def patch_evse(
                             c_value = datetime.fromisoformat(c_value.replace("Z", "+00:00"))
                         setattr(db_conn, c_key, c_value)
     except Exception as e:
-        session.rollback()
+        await session.rollback()
         # This will now catch the Enum error from the EVSEUpdate schema
         raise HTTPException(status_code=400, detail=f"Validation Error: {str(e)}")
 
@@ -300,8 +297,8 @@ async def patch_evse(
     db_evse.location.last_updated = datetime.now()
 
     session.add(db_evse)
-    session.commit()
-    session.refresh(db_evse)
+    await session.commit()
+    await session.refresh(db_evse)
 
     data_as_schema = EVSERead.model_validate(db_evse)
 
