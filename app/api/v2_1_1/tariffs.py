@@ -5,7 +5,7 @@ from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, select
 from app.database import engine, get_session
 from app.models import Tariff, PartnerProfile, TariffType, TariffElement, TariffRestriction, PriceComponent
-from datetime import datetime
+from datetime import datetime, timezone
 from app.api.v2_1_1.schemas import TariffRead
 
 router = APIRouter()
@@ -98,11 +98,12 @@ async def put_tariff(
             await process_tariff(tariff_data, cpo_profile, session)
 
         await session.commit()
+        timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
         return {
             "status_code": 1000,
             "status_message": "Tariff successfully updated/created",
-            "timestamp": datetime.now()
+            "timestamp": timestamp
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to process Tariff: {str(e)}")
@@ -148,14 +149,17 @@ async def patch_tariff(
     cpo_profile = PartnerProfile(country_code=country_code, party_id=party_id)
 
     async with session.begin_nested():
-        await process_tariff(updated_full_data, cpo_profile, session)
+        tariff_obj = await process_tariff(updated_full_data, cpo_profile, session)
 
     await session.commit()
+    timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
 
     return {
         "status_code": 1000,
         "status_message": "Tariff patched successfully",
-        "data": []
+        "timestamp": timestamp,
+        "data": [tariff_obj]
     }
 
 @router.get("/", response_model=dict)
