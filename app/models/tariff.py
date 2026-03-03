@@ -77,7 +77,7 @@ class TariffElement(OCPIBaseModel, table=True):
     )
     restrictions: Optional["TariffRestriction"] = Relationship(
         back_populates="element",
-        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+        sa_relationship_kwargs={"cascade": "all, delete-orphan", "uselist": False}
     )
 
 class Tariff(OCPIBaseModel, table=True):
@@ -86,7 +86,7 @@ class Tariff(OCPIBaseModel, table=True):
     country_code: str = Field(primary_key=True)
     party_id: str = Field(primary_key=True)
 
-    tariff_alt_text: Optional[str] = None
+    tariff_alt_text: Optional[List[dict]] = Field(default=None, sa_column=Column(JSON))
     tariff_alt_url: Optional[str] = None
     energy_mix: Optional[dict] = Field(default=None, sa_column=Column(JSON))
 

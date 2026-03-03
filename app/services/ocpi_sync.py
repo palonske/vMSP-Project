@@ -6,6 +6,7 @@ from sqlmodel import select
 from app.models.partner import PartnerProfile, PartnerRole
 from app.models.location import Location
 from app.api.v2_1_1.locations import process_location
+from app.api.v2_1_1.tariffs import process_tariff
 
 class OCPISyncService:
     def __init__(self, session: AsyncSession):
@@ -20,9 +21,10 @@ class OCPISyncService:
         async with httpx.AsyncClient(timeout=60.0) as client:
             for cpo in cpos:
                 print(f"Starting sync for: {cpo.party_id}")
-                await self.sync_single_cpo(client, cpo, self.session)
+                #await self.sync_single_cpo_locations(client, cpo, self.session)
+                await self.sync_single_cpo_tariffs(client, cpo, self.session)
 
-    async def sync_single_cpo(self, client: httpx.AsyncClient, cpo: PartnerProfile, session: AsyncSession):
+    async def sync_single_cpo_locations(self, client: httpx.AsyncClient, cpo: PartnerProfile, session: AsyncSession):
         report = {
             "cpo": f"{cpo.country_code}-{cpo.party_id}",
             "total_received": 0,
@@ -101,7 +103,84 @@ class OCPISyncService:
 
         print_sync_summary(report)
 
+    async def sync_single_cpo_tariffs(self, client: httpx.AsyncClient, cpo: PartnerProfile, session: AsyncSession):
+        report = {
+            "cpo": f"{cpo.country_code}-{cpo.party_id}",
+            "total_received": 0,
+            "success_count": 0,
+            "failure_count": 0,
+            "errors": []  # List of dicts: {"id": "TAR1", "reason": "...", "type": "..."}
+        }
 
+        # 1. Start with the base tariffs URL from the profile
+        # Note: OCPI paths usually end in /tariffs
+        print(f"Calling CPO with versions_url base:  {cpo.versions_url}")
+        next_url = f"{cpo.versions_url.rstrip('/')}/tariffs"
+
+        headers = {
+            "Authorization": f"Token {cpo.token_c}",
+            "Content-Type": "application/json"
+        }
+
+        cpo_profile = PartnerProfile(
+            country_code=cpo.country_code,
+            party_id=cpo.party_id
+        )
+
+        while next_url:
+            print(f"Fetching: {next_url}")
+            try:
+                response = await client.get(next_url, headers=headers)
+                response.raise_for_status()
+
+                payload = response.json()
+                tariffs_data = payload.get("data", [])
+                report["total_received"] += len(tariffs_data)
+
+                # 2. Process each location in the current page
+                for tar_raw in tariffs_data:
+                    tariff_id = tar_raw.get("id")
+                    try:
+                        if not tariff_id:
+                            print(f"⚠️ Skipping location: Missing ID in raw data.")
+                            continue
+
+                        async with self.session.begin_nested():
+                            await process_and_save_tariff(tar_raw, cpo, tariff_id, self.session)
+                            report["success_count"] += 1
+
+                    except Exception as e:
+                        print(f"❌ Error processing location {tar_raw.get('id', 'Unknown')}: {e}")
+
+                        report["failure_count"] += 1
+                        report["errors"].append({
+                            "tariff_id": tariff_id,
+                            "error_type": type(e).__name__,
+                            "details": str(e)[:200] # Cap the message length
+                        })
+
+                        continue
+
+                # 3. Handle OCPI Pagination
+                # OCPI uses the 'Link' header for the next page: <url>; rel="next"
+                next_url = parse_next_link(response.headers.get("Link"))
+
+                print(f"📥 Page processed. Total so far: {report['total_received']} | "
+                      f"Success: {report['success_count']} | "
+                      f"Failures: {report['failure_count']}")
+
+
+                # Commit after every page to keep transactions manageable
+                await session.commit()
+
+            except httpx.HTTPStatusError as e:
+                print(f"HTTP Error for {cpo.party_id}: {e.response.status_code}")
+                break
+            except Exception as e:
+                print(f"Unexpected error syncing {cpo.party_id}: {e}")
+                break
+
+        print_sync_summary(report)
 
 def parse_next_link(link_header: str):
     """Parses 'Link: <url>; rel="next"' header"""
@@ -136,3 +215,10 @@ async def process_and_save_location(raw_data: dict, cpo: PartnerProfile, loc_id,
     raw_data["party_id"] = cpo.party_id
 
     await process_location(raw_data, cpo, session)
+
+async def process_and_save_tariff(raw_data: dict, cpo: PartnerProfile, loc_id, session: AsyncSession):
+    # Inject the ownership codes from the Profile
+    raw_data["country_code"] = cpo.country_code
+    raw_data["party_id"] = cpo.party_id
+
+    await process_tariff(raw_data, cpo, session)

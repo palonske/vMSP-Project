@@ -49,12 +49,16 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 class PriceComponentRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     type: str  # ENERGY, FLAT, PARKING_TIME, TIME
     price: float
     vat: Optional[float] = None
     step_size: int
 
 class TariffRestrictionRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     start_time: Optional[str] = None
     end_time: Optional[str] = None
     start_date: Optional[str] = None
@@ -70,10 +74,14 @@ class TariffRestrictionRead(BaseModel):
     day_of_week: List[str] = []
 
 class TariffElementRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     price_components: List[PriceComponentRead]
     restrictions: Optional[TariffRestrictionRead] = None
 
 class TariffRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     currency: str
     type: Optional[str] = None
