@@ -251,7 +251,8 @@ async def save_module_urls(
             version=version,
             country_code=partner.country_code,
             party_id=partner.party_id,
-            url=ep.get("url")
+            url=ep.get("url"),
+            role="CPO"
         )
         print(f"Storing Module: {module_url.identifier}")
         session.add(module_url)
@@ -264,10 +265,11 @@ async def is_cpo_registered(session: AsyncSession, country_code: str, party_id: 
     """
     Checks the database to see if a partner with this ID already exists.
     """
-    print(f"Checking if Party {party_id}, and Country {country_code} exists in database")
+    print(f"Checking if Party {party_id}, and Country {country_code} exists as CPO in database")
     statement = select(PartnerProfile).where(
         PartnerProfile.country_code == country_code,
-        PartnerProfile.party_id == party_id
+        PartnerProfile.party_id == party_id,
+        PartnerProfile.role=="CPO"
     )
     result = await session.execute(statement)
     partner = result.scalar_one_or_none()
