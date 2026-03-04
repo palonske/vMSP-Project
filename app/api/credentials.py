@@ -9,11 +9,12 @@ import secrets
 from app.database import get_session
 from app.models.partner import PartnerProfile, Endpoint
 
+
 router = APIRouter()
 
 
 @router.post("/manual_register")
-async def manual_registration(
+async def manual_register_api(
         token_b: str = Body(...),
         token_c: str = Body(...),
         country_code: str = Body(...),
@@ -52,7 +53,44 @@ async def manual_registration(
             }
         }
 
-@router.post("/internal_register")
+@router.post("/internal_msp_register")
+async def create_token_a(
+        authorization: str = Header(None),
+        session: AsyncSession = Depends(get_session)
+):
+    token_a = secrets.token_hex(16)
+    base = settings.BASE_URL.rstrip("/")
+
+    partner = PartnerProfile(
+        token_a=token_a,
+        country_code="TB",
+        party_id="000",
+        role="EMSP",
+        status="REGISTERED",
+        versions_url="www.tbd.com",
+        registered_version="T.B.D"
+    )
+
+    while await is_partner_registered(session,partner.country_code, partner.party_id, partner.role):
+        old_party_id = int(partner.party_id)
+        new_party_id = str(old_party_id + 1).zfill(3)
+        partner.party_id = new_party_id
+
+    print(f"Creating Token A {partner.token_a}, for temporary partner {partner.party_id}")
+
+    session.add(partner)
+    await session.commit()
+
+    return {
+        "status_code": 1000,
+        "status_message": "Success",
+        "data": {
+            "Token A": f"{partner.token_a}",
+            "Versions URL": f"{base}/ocpi/cpo/2.1.1"
+        }
+    }
+
+@router.post("/internal_cpo_register")
 async def credentials_handshake(
         token_a: str,
         versions_url: str,
@@ -249,7 +287,7 @@ async def perform_registration(session: AsyncSession, cpo_credentials_url: str, 
             registered_version=creds_in.registered_version
         )
 
-        already_exists = await is_cpo_registered(session, partner.country_code, partner.party_id, "CPO")
+        already_exists = await is_partner_registered(session, partner.country_code, partner.party_id, "CPO")
 
         if not already_exists:
             session.add(partner)
@@ -302,7 +340,7 @@ async def save_module_urls(
     await session.flush()
     await session.commit()
 
-async def is_cpo_registered(session: AsyncSession, country_code: str, party_id: str, role: str) -> bool:
+async def is_partner_registered(session: AsyncSession, country_code: str, party_id: str, role: str) -> bool:
     """
     Checks the database to see if a partner with this ID already exists.
     """
@@ -315,10 +353,12 @@ async def is_cpo_registered(session: AsyncSession, country_code: str, party_id: 
     result = await session.execute(statement)
     partner = result.scalar_one_or_none()
 
+    print(f"Found result: {partner}")
+
     return partner is not None
 
 async def manual_registration(session: AsyncSession, partner: PartnerProfile, endpoints: List[Endpoint]) -> bool:
-    already_exists = await is_cpo_registered(session, partner.country_code, partner.party_id, partner.role)
+    already_exists = await is_partner_registered(session, partner.country_code, partner.party_id, partner.role)
 
     if not already_exists:
         session.add(partner)
