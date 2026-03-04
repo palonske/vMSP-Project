@@ -24,6 +24,7 @@ async def process_location(raw_data: dict, cpo: PartnerProfile, session: AsyncSe
     try:
         validated_loc = LocationRead.model_validate(raw_data)
         location_id = validated_loc.id
+        print(f"Validated Location ID: {location_id}")
     except ValidationError as e:
         print(f"Skipping invalid location data: {e}")
         raise e
@@ -66,7 +67,7 @@ async def process_location(raw_data: dict, cpo: PartnerProfile, session: AsyncSe
     session.add(location_obj)
     await session.flush()
 
-    return {"status_code": 1000, "status_message": "Success", "data": [location_obj.id]}
+    return {"status_code": 1000, "status_message": "Success", "data": f"{[location_obj.id]} stored successfully."}
 
 # --- GET ALL LOCATIONS ---
 @router.get("/", response_model=dict)
@@ -177,7 +178,7 @@ async def put_location(
 
     try:
         cpo = PartnerProfile(country_code=country_code, party_id=party_id)
-        response_json =     process_location(raw_data, cpo, session)
+        response_json =    await process_location(raw_data, cpo, session)
         return response_json
     except Exception as e:
         await session.rollback()
