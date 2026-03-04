@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from app.models.base import OCPIBaseModel
 from app.models.evse import Status
+from app.models.partner import PartnerProfile
 
 
 # 1. Connector Schema (Plain Pydantic)
@@ -88,7 +89,29 @@ class TariffRead(BaseModel):
     elements: List[TariffElementRead]
     last_updated: datetime
 
+class InternalRegister(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    token_a: str
+    versions_url: str
+    version_detail_url: Optional[str] = None
+    registered_version: Optional[str] = None
+
+class PartnerSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    token_c: str  # This will be your TOKEN_C
+    token_b: str
+    token_a: str
+    versions_url: str    # Your Versions URL
+    roles: List[dict]
+    business_details: dict
+    party_id: str
+    country_code: str
+
 ConnectorRead.model_rebuild()
 EVSERead.model_rebuild()
 LocationRead.model_rebuild()
 TariffRead.model_rebuild()
+PartnerSchema.model_rebuild()
+InternalRegister.model_rebuild()

@@ -9,7 +9,7 @@ from app.models.connector import Connector
 from app.database import engine, create_db_and_tables
 from sqlmodel import Session
 from app.api.v2_1_1 import locations, tariffs
-from app.api import emspversions
+from app.api import emspversions, credentials
 
 app = FastAPI(title="OCPI Platform")
 
@@ -27,6 +27,11 @@ app.include_router(
    emspversions.router,
     prefix="/ocpi/emsp",
     tags=["EMSP Versions"]
+)
+app.include_router(
+    credentials.router,
+    prefix="/ocpi",
+    tags=["credentials"]
 )
 
 @app.get("/")
