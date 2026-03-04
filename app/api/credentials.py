@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 import httpx
 from sqlmodel import select, delete
@@ -11,6 +11,46 @@ from app.models.partner import PartnerProfile, Endpoint
 
 router = APIRouter()
 
+
+@router.post("/manual_register")
+async def manual_registration(
+        token_b: str = Body(...),
+        token_c: str = Body(...),
+        country_code: str = Body(...),
+        party_id: str = Body(...),
+        role: str = Body(...),
+        registered_version: str = Body(...),
+        status: str = Body(...),
+        versions_url: str = Body(...),
+        session: AsyncSession = Depends(get_session),
+        endpoints: List[Endpoint] = List[Body(None)],
+        token_a: str | None = Body(None),
+        authorization: str = Header(None)
+
+):
+    new_partner = PartnerProfile(token_a=token_a, token_b=token_b, token_c=token_c,
+                                 country_code=country_code, party_id=party_id, versions_url=versions_url,
+                                 registered_version=registered_version,
+                                 status=status, endpoints=endpoints, role=role)
+
+    registration_success = await manual_registration(session, new_partner, endpoints)
+
+    if registration_success:
+        return {
+            "status_code": 1000,
+            "status_message": "Success",
+            "data": {
+                f"{new_partner}"
+            }
+        }
+    else:
+        return {
+            "status_code": 4000,
+            "status_message": "ERROR",
+            "data": {
+                "A Processing Error has Occurred."
+            }
+        }
 
 @router.post("/internal_register")
 async def credentials_handshake(
@@ -209,13 +249,13 @@ async def perform_registration(session: AsyncSession, cpo_credentials_url: str, 
             registered_version=creds_in.registered_version
         )
 
-        already_exists = await is_cpo_registered(session, partner.country_code, partner.party_id)
+        already_exists = await is_cpo_registered(session, partner.country_code, partner.party_id, "CPO")
 
         if not already_exists:
             session.add(partner)
             await session.commit()
 
-            await save_module_urls(session, partner, endpoints, "2.1.1")
+            await save_module_urls(session, partner, endpoints, "2.1.1", "CPO")
 
             return partner
 
@@ -230,7 +270,8 @@ async def save_module_urls(
         session: AsyncSession,
         partner: PartnerProfile,
         endpoints: list,
-        version: str
+        version: str,
+        role: str
 ):
     """
     Saves or updates the list of module endpoints for a specific partner and version.
@@ -261,17 +302,64 @@ async def save_module_urls(
     await session.flush()
     await session.commit()
 
-async def is_cpo_registered(session: AsyncSession, country_code: str, party_id: str) -> bool:
+async def is_cpo_registered(session: AsyncSession, country_code: str, party_id: str, role: str) -> bool:
     """
     Checks the database to see if a partner with this ID already exists.
     """
-    print(f"Checking if Party {party_id}, and Country {country_code} exists as CPO in database")
+    print(f"Checking if Party {party_id}, and Country {country_code} exists as {role} in database")
     statement = select(PartnerProfile).where(
         PartnerProfile.country_code == country_code,
         PartnerProfile.party_id == party_id,
-        PartnerProfile.role=="CPO"
+        PartnerProfile.role== role
     )
     result = await session.execute(statement)
     partner = result.scalar_one_or_none()
 
     return partner is not None
+
+async def manual_registration(session: AsyncSession, partner: PartnerProfile, endpoints: List[Endpoint]) -> bool:
+    already_exists = await is_cpo_registered(session, partner.country_code, partner.party_id, partner.role)
+
+    if not already_exists:
+        session.add(partner)
+        await session.flush()
+
+        # 1. Clear existing endpoints for this version/partner to avoid duplicates
+        # This is safer than trying to match individual IDs
+        delete_stmt = delete(Endpoint).where(
+            Endpoint.country_code == partner.country_code,
+            Endpoint.party_id == partner.party_id,
+            Endpoint.version == partner.registered_version,
+            Endpoint.role == partner.role
+        )
+        await session.execute(
+            delete_stmt,
+            execution_options={"synchronize_session": "fetch"}
+        )
+        await session.flush()
+
+        print(f"Storing these endpoints: {endpoints}")
+
+        # 2. Iterate through the OCPI endpoints list
+        for ep in endpoints:
+            new_module = Endpoint(
+                identifier=ep.identifier,
+                version=ep.version,
+                country_code=partner.country_code,
+                party_id=partner.party_id,
+                role=partner.role,
+                url=ep.url
+            )
+            print(f"Storing Module: {new_module.identifier}")
+            session.add(new_module)
+
+        await session.commit()
+        print(f"✅ Stored Endpoints Successfully!")
+
+        return True
+
+    elif already_exists:
+        print("Partner Already Exists")
+        return False
+    else:
+        return False
