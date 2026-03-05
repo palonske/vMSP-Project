@@ -50,7 +50,7 @@ class PartnerProfile(SQLModel, table=True):
     token_c: Optional[str] = None  # Token YOU use to call THEM (for CPOs)
     token_b: Optional[str] = None  # Token THEY use to call YOU (for MSPs)
     token_a: Optional[str] = None  # Token used for versions/credentials module
-
+    version_detail_url: Optional[str] = None
     versions_url: str
     business_details: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     registered_version: str

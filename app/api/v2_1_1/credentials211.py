@@ -59,6 +59,10 @@ async def register_emsp(
 
         print(f"Registering new EMSP: {new_partner.country_code}{new_partner.party_id} with Token C: {token_c} as {preregistered_partner.party_id}")
 
+        versions = await fetch_partner_versions(new_partner.versions_url, new_partner.token_b)
+        new_partner = await select_partner_version(new_partner, versions)
+        endpoints = await fetch_version_details(new_partner)
+
         statement = update(PartnerProfile).where(
             PartnerProfile.party_id == preregistered_partner.party_id,
             PartnerProfile.country_code == preregistered_partner.country_code,
@@ -69,6 +73,8 @@ async def register_emsp(
         try:
             print(f"Attempting Update: {statement}")
             await session.execute(statement)
+            await save_module_urls(session, new_partner, endpoints, versions, new_partner.role)
+
         except Exception as e:
             await session.rollback()
             raise HTTPException(status_code=400, detail=str(e))
@@ -82,7 +88,7 @@ async def register_emsp(
             "timestamp": f"{timestamp}",
             "data":
                 {
-                    "url": f"{settings.BASE_URL}/ocpi/versions",
+                    "url": f"{settings.BASE_URL}/ocpi/cpo/versions",
                     "token": f"{token_c}",
                     "party_id": "EPS",
                     "country_code": "US",
@@ -125,3 +131,131 @@ async def register_emsp(
                 "timestamp": f"{timestamp}"
             }
         )
+
+async def fetch_partner_versions(versions_url: str, token: str) -> List[dict]:
+    """
+    Calls the Partners's Versions endpoint to see what they support.
+    """
+    headers = {
+        "Authorization": f"Token {token}",
+        "Content-Type": "application/json",
+    }
+
+    print(f"Calling Versions: {versions_url}")
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            response = await client.get(versions_url, headers=headers)
+            response.raise_for_status()
+
+            payload = response.json()
+
+            # OCPI 2.1.1 standard response wrapper check
+            if payload.get("status_code") == 1000:
+                versions = payload.get("data", [])
+                return versions
+            else:
+                print(f"OCPI Error: {payload.get('status_message')}")
+                return []
+
+        except httpx.HTTPStatusError as e:
+            print(f"HTTP Error {e.response.status_code} while fetching versions")
+            return []
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            return []
+
+
+async def select_partner_version(partner: PartnerProfile,versions: List[dict]) -> Optional[PartnerProfile]:
+    print(f"Finding Version Match from: {versions}")
+    for v in versions:
+        if v.get("version") == "2.1.1":
+            partner.version_detail_url = v.get("url")
+            partner.registered_version = "2.1.1"
+            return partner
+    return None
+
+async def fetch_version_details(partner: PartnerProfile) -> Optional[List[Endpoint]]:
+    """
+    Fetches the module list for a specific version and returns the Credentials endpoint.
+    """
+    headers = {"Authorization": f"Token {partner.token_b}"}
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(partner.version_detail_url, headers=headers)
+
+        raw_payload = response.json()
+        data = raw_payload.get("data")
+        print(f"Found data {data}")
+
+        if isinstance(data, list):
+            # If data is a list, the CPO might be sending the endpoints directly
+            # (Non-standard but happens) or this is actually the Versions list.
+            print("Data is list")
+            endpoints = data
+        elif isinstance(data, dict):
+            # Standard OCPI 2.1.1 Version Details structure
+            print("Data is dict")
+            endpoints = data.get("endpoints", [])
+        else:
+            endpoints = []
+
+        #data = response.json().get("data", {})
+
+        #endpoints = data.get("endpoints", [])
+
+        print(f"Found endpoints: {endpoints}")
+
+        endpoint_objects = [
+            Endpoint(
+                version="2.1.1",
+                country_code=partner.country_code,
+                party_id=partner.party_id,
+                role=partner.role,
+                url=ep.get("url"),
+                identifier=ep.get("identifier")
+            )
+            for ep in endpoints
+        ]
+
+        if endpoint_objects:
+            return endpoint_objects
+        else:
+            return None
+
+
+async def save_module_urls(
+        session: AsyncSession,
+        partner: PartnerProfile,
+        endpoints: list,
+        version: str,
+        role: str
+):
+    """
+    Saves or updates the list of module endpoints for a specific partner and version.
+    """
+    # 1. Clear existing endpoints for this version/partner to avoid duplicates
+    # This is safer than trying to match individual IDs
+    delete_stmt = delete(Endpoint).where(
+        Endpoint.country_code == partner.country_code,
+        Endpoint.party_id == partner.party_id,
+        Endpoint.version == version
+    )
+    await session.execute(delete_stmt)
+    print(f"Storing these endpoints: {endpoints}")
+    # 2. Iterate through the OCPI endpoints list
+    for ep in endpoints:
+        module_url = Endpoint(
+            identifier=ep.get("identifier"),
+            version=version,
+            country_code=partner.country_code,
+            party_id=partner.party_id,
+            url=ep.get("url"),
+            role="CPO"
+        )
+        print(f"Storing Module: {module_url.identifier}")
+        session.add(module_url)
+    print(f"✅ Stored Endpoints Successfully!")
+    # 3. Flush to the database (session.commit() usually happens in the main caller)
+    await session.flush()
+    await session.commit()
