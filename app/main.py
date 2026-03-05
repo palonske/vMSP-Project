@@ -8,11 +8,21 @@ from app.models.evse import EVSE
 from app.models.connector import Connector
 from app.database import engine, create_db_and_tables
 from sqlmodel import Session
-from app.api.v2_1_1 import locations, tariffs
+from app.api.v2_1_1 import locations, tariffs, credentials211
 from app.api import emspversions, credentials, cpoversions
 
 app = FastAPI(title="OCPI Platform")
 
+app.include_router(
+    credentials211.cporouter,
+    prefix="/ocpi/cpo/2.1.1/credentials",
+    tags=["CPO Credentials v2.1.1"]
+)
+app.include_router(
+    credentials211.emsprouter,
+    prefix="/ocpi/emsp/2.1.1/credentials",
+    tags=["EMSP Credentials v2.1.1"]
+)
 app.include_router(
     locations.router,
     prefix="/ocpi/emsp/2.1.1/locations",
