@@ -73,7 +73,7 @@ async def register_emsp(
         try:
             print(f"Attempting Update: {statement}")
             await session.execute(statement)
-            await save_module_urls(session, new_partner, endpoints, versions, new_partner.role)
+            await save_module_urls(session, new_partner, endpoints, new_partner.registered_version, new_partner.role)
 
         except Exception as e:
             await session.rollback()
@@ -246,12 +246,12 @@ async def save_module_urls(
     # 2. Iterate through the OCPI endpoints list
     for ep in endpoints:
         module_url = Endpoint(
-            identifier=ep.get("identifier"),
+            identifier=ep.identifier,
             version=version,
             country_code=partner.country_code,
             party_id=partner.party_id,
-            url=ep.get("url"),
-            role="CPO"
+            url=ep.url,
+            role=ep.role
         )
         print(f"Storing Module: {module_url.identifier}")
         session.add(module_url)
