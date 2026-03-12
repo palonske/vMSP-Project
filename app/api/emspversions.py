@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Request
 from app.config import settings
+from app.core.utils import get_timestamp
 
 router = APIRouter()
 
@@ -8,12 +9,12 @@ router = APIRouter()
 async def get_available_version(request: Request):
 
     base = settings.BASE_URL.rstrip("/")
-    timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    #timestamp = get_timestamp()
 
     return {
         "status_code": 1000,
         "status_message": "Success",
-        "timestamp": f"{timestamp}",
+        "timestamp": get_timestamp(),
         "data": [
             {
                 "version": "2.1.1",
@@ -26,12 +27,12 @@ async def get_available_version(request: Request):
 async def get_211_version_details(request: Request):
     # We use settings.BASE_URL to build the absolute paths
     base = settings.BASE_URL.rstrip("/")
-    timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    #timestamp = get_timestamp()
 
     return {
         "status_code": 1000,
         "status_message": "Success",
-        "timestamp": f"{timestamp}",
+        "timestamp": get_timestamp(),
         "data": {
             "version": "2.1.1",
             "endpoints": [

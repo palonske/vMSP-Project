@@ -12,6 +12,7 @@ from app.config import settings
 import secrets
 from app.database import get_session
 from app.models.partner import PartnerProfile, Endpoint, PartnerRole
+from app.core.utils import get_timestamp
 
 cporouter = APIRouter()
 emsprouter = APIRouter()
@@ -80,12 +81,11 @@ async def register_emsp(
             raise HTTPException(status_code=400, detail=str(e))
 
         await session.commit()
-        timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
         return {
             "status_code": 1000,
             "status_message": "Success",
-            "timestamp": f"{timestamp}",
+            "timestamp": get_timestamp(),
             "data":
                 {
                     "url": f"{settings.BASE_URL}/ocpi/cpo/versions",
@@ -107,7 +107,7 @@ async def register_emsp(
                 }
         }
     elif preregistered_partner and preregistered_partner.status not in "REGISTERED":
-        timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        #timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
         print("Token A already registered. Returning Error Response")
 
@@ -116,19 +116,19 @@ async def register_emsp(
                 detail={
                     "status_code": 3001, # OCPI Client Error: Invalid input
                     "status_message": "Token A Already Registered",
-                    "timestamp": f"{timestamp}"
+                    "timestamp": get_timestamp()
                 }
             )
     else:
 
-        timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        #timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
                 "status_code": 2001, # OCPI Client Error: Invalid input
                 "status_message": "Invalid Token A: Partner not found",
-                "timestamp": f"{timestamp}"
+                "timestamp": get_timestamp()
             }
         )
 
@@ -168,7 +168,7 @@ async def update_partner(
 
 
     token_bc = Authorization.replace("Token ", "").replace("token ", "").strip()
-    timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    #timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
     if await find_preregistered_emsp(token_bc, session):
         raise HTTPException(
@@ -176,7 +176,7 @@ async def update_partner(
             detail={
                 "status_code": 3001, # OCPI Client Error: Invalid input
                 "status_message": "Partner is not registered.",
-                "timestamp": f"{timestamp}"
+                "timestamp": get_timestamp()
             }
         )
     elif not await find_registered_partner(token_bc, session):
@@ -185,7 +185,7 @@ async def update_partner(
             detail={
                 "status_code": 3001, # OCPI Client Error: Invalid input
                 "status_message": "Unauthorized",
-                "timestamp": f"{timestamp}"
+                "timestamp": get_timestamp()
             }
         )
     else:
@@ -235,7 +235,7 @@ async def update_partner(
         return {
             "status_code": 1000,
             "status_message": "Success",
-            "timestamp": f"{timestamp}",
+            "timestamp": get_timestamp(),
             "data":
                 {
                     "url": f"{settings.BASE_URL}/ocpi/cpo/versions",

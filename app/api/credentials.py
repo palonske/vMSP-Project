@@ -8,6 +8,7 @@ from app.config import settings
 import secrets
 from app.database import get_session
 from app.models.partner import PartnerProfile, Endpoint
+from app.core.utils import get_timestamp, fix_date
 
 
 router = APIRouter()
@@ -127,6 +128,7 @@ async def credentials_handshake(
         return {
             "status_code": 1000,
             "status_message": "Success",
+            "timestamp": get_timestamp(),
             "data": {
                 f"{partner}"
             }

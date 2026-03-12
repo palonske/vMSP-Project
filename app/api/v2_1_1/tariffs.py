@@ -7,15 +7,16 @@ from app.database import engine, get_session
 from app.models import Tariff, PartnerProfile, TariffType, TariffElement, TariffRestriction, PriceComponent
 from datetime import datetime, timezone
 from app.api.v2_1_1.schemas import TariffRead
+from app.core.utils import get_timestamp, fix_date
 
 router = APIRouter()
 
 # Helper shared with locations to handle OCPI date formats
-def fix_date(data_dict):
-    date_str = data_dict.get("last_updated")
-    if date_str and isinstance(date_str, str):
-        data_dict["last_updated"] = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
-    return data_dict
+#def fix_date(data_dict):
+#    date_str = data_dict.get("last_updated")
+#    if date_str and isinstance(date_str, str):
+#        data_dict["last_updated"] = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+#    return data_dict
 
 async def process_tariff(raw_data: dict, cpo: PartnerProfile, session: AsyncSession):
     # 0. Inject ownership metadata
@@ -98,12 +99,12 @@ async def put_tariff(
             await process_tariff(tariff_data, cpo_profile, session)
 
         await session.commit()
-        timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        #timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
         return {
             "status_code": 1000,
             "status_message": "Tariff successfully updated/created",
-            "timestamp": timestamp
+            "timestamp": get_timestamp()
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to process Tariff: {str(e)}")
@@ -152,13 +153,13 @@ async def patch_tariff(
         tariff_obj = await process_tariff(updated_full_data, cpo_profile, session)
 
     await session.commit()
-    timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    #timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
     return {
         "status_code": 1000,
         "status_message": "Tariff patched successfully",
-        "timestamp": timestamp,
+        "timestamp": get_timestamp(),
         "data": [tariff_obj]
     }
 
@@ -178,6 +179,7 @@ async def get_tariffs(session: AsyncSession = Depends(get_session)):
     return {
         "status_code": 1000,
         "status_message": "Success",
+        "timestamp": get_timestamp(),
         "data": [TariffRead.model_validate(t) for t in tariffs]
     }
 
@@ -205,5 +207,6 @@ async def get_tariff(
     return {
         "status_code": 1000,
         "status_message": "Success",
+        "timestamp": get_timestamp(),
         "data": [TariffRead.model_validate(tariff)]
     }

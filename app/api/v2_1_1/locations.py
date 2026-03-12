@@ -3,7 +3,7 @@ from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, select
-
+from app.core.utils import fix_date, get_timestamp
 from app.core.authorization import get_current_partner
 from app.database import engine, get_session
 from app.models import Location, EVSE, Connector, PartnerProfile
@@ -14,11 +14,11 @@ emsprouter = APIRouter()
 cporouter = APIRouter()
 
 # Helper to fix dates (move this to a utils.py later if you want)
-def fix_date(data_dict):
-    date_str = data_dict.get("last_updated")
-    if date_str and isinstance(date_str, str):
-        data_dict["last_updated"] = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
-    return data_dict
+#def fix_date(data_dict):
+#    date_str = data_dict.get("last_updated")
+#    if date_str and isinstance(date_str, str):
+#       data_dict["last_updated"] = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+#    return data_dict
 
 async def process_location(raw_data: dict, cpo: PartnerProfile, session: AsyncSession):
     raw_data["country_code"] = cpo.country_code
@@ -94,6 +94,7 @@ async def get_locations(partner: PartnerProfile = Depends(get_current_partner),s
     return {
         "status_code": 1000,
         "status_message": "Success",
+        "timestamp": get_timestamp(),
         "data": data_as_schema  # <-- LocationRead will now see 'evses'
     }
 
@@ -173,6 +174,7 @@ async def get_evse(
     return {
         "status_code": 1000,
         "status_message": "Success",
+        "timestamp": get_timestamp(),
         "data": data_as_schema  # <-- LocationRead will now see 'evses'
     }
 
@@ -258,6 +260,7 @@ async def patch_location(
     return {
         "status_code": 1000,
         "status_message": "Location patched successfully",
+        "timestamp": get_timestamp(),
         "data": [db_location.id]
     }
 
@@ -315,5 +318,6 @@ async def patch_evse(
     return {
         "status_code": 1000,
         "status_message": "EVSE updated successfully",
+        "timestamp": get_timestamp(),
         "data": [data_as_schema]
     }
