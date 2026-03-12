@@ -24,8 +24,13 @@ app.include_router(
     tags=["EMSP Credentials v2.1.1"]
 )
 app.include_router(
-    locations.router,
+    locations.emsprouter,
     prefix="/ocpi/emsp/2.1.1/locations",
+    tags=["Locations v2.1.1"]
+)
+app.include_router(
+    locations.cporouter,
+    prefix="/ocpi/cpo/2.1.1/locations",
     tags=["Locations v2.1.1"]
 )
 app.include_router(

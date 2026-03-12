@@ -3,12 +3,15 @@ from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, select
+
+from app.core.authorization import get_current_partner
 from app.database import engine, get_session
 from app.models import Location, EVSE, Connector, PartnerProfile
 from datetime import datetime
 from app.api.v2_1_1.schemas import LocationRead, EVSERead, ConnectorRead, EVSEUpdate
 
-router = APIRouter()
+emsprouter = APIRouter()
+cporouter = APIRouter()
 
 # Helper to fix dates (move this to a utils.py later if you want)
 def fix_date(data_dict):
@@ -70,9 +73,13 @@ async def process_location(raw_data: dict, cpo: PartnerProfile, session: AsyncSe
     return {"status_code": 1000, "status_message": "Success", "data": f"{[location_obj.id]} stored successfully."}
 
 # --- GET ALL LOCATIONS ---
-@router.get("/", response_model=dict)
-async def get_locations(session: AsyncSession = Depends(get_session)):
+@emsprouter.get("/", response_model=dict)
+@cporouter.get("/", response_model=dict)
+async def get_locations(partner: PartnerProfile = Depends(get_current_partner),session: AsyncSession = Depends(get_session)):
     # Select all location records
+
+    print(f"Partner {partner.country_code}{partner.party_id} is requesting locations.")
+
     statement = (
         select(Location)
         .options(
@@ -92,7 +99,8 @@ async def get_locations(session: AsyncSession = Depends(get_session)):
 
 
 # --- GET SPECIFIC LOCATION ---
-@router.get("/{country_code}/{party_id}/{location_id}", response_model=dict)
+@cporouter.get("/{country_code}/{party_id}/{location_id}", response_model=dict)
+@emsprouter.get("/{country_code}/{party_id}/{location_id}", response_model=dict)
 async def get_location(
         country_code: str,
         party_id: str,
@@ -131,7 +139,8 @@ async def get_location(
     }
 
 # --- GET SPECIFIC EVSE ---
-@router.get("/{country_code}/{party_id}/{location_id}/{evse_uid}", response_model=dict)
+@cporouter.get("/{country_code}/{party_id}/{location_id}/{evse_uid}", response_model=dict)
+@emsprouter.get("/{country_code}/{party_id}/{location_id}/{evse_uid}", response_model=dict)
 async def get_evse(
         country_code: str,
         party_id: str,
@@ -167,7 +176,7 @@ async def get_evse(
         "data": data_as_schema  # <-- LocationRead will now see 'evses'
     }
 
-@router.put("/{country_code}/{party_id}/{location_id}")
+@cporouter.put("/{country_code}/{party_id}/{location_id}")
 async def put_location(
         country_code: str,
         party_id: str,
@@ -185,7 +194,7 @@ async def put_location(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.patch("/{country_code}/{party_id}/{location_id}")
+@cporouter.patch("/{country_code}/{party_id}/{location_id}")
 async def patch_location(
         country_code: str,
         party_id: str,
@@ -252,7 +261,7 @@ async def patch_location(
         "data": [db_location.id]
     }
 
-@router.patch("/{country_code}/{party_id}/{location_id}/{evse_uid}")
+@cporouter.patch("/{country_code}/{party_id}/{location_id}/{evse_uid}")
 async def patch_evse(
         country_code: str,
         party_id: str,
