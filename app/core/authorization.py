@@ -40,6 +40,7 @@ async def get_current_partner(
 
 def validate_role(required_role: str):
     async def role_checker(partner: PartnerProfile = Depends(get_current_partner)):
+        print(f"Checking if partner: {partner.country_code}{partner.party_id} with role of {partner.role} matches required role of {required_role}.")
         if partner.role != required_role:
             raise HTTPException(status_code=403, detail="Forbidden: Wrong OCPI Role")
         return partner

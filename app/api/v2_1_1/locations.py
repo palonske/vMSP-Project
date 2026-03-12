@@ -4,11 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, select
 from app.core.utils import fix_date, get_timestamp
-from app.core.authorization import get_current_partner
+from app.core.authorization import get_current_partner, validate_role
 from app.database import engine, get_session
 from app.models import Location, EVSE, Connector, PartnerProfile
 from datetime import datetime
 from app.api.v2_1_1.schemas import LocationRead, EVSERead, ConnectorRead, EVSEUpdate
+from app.models.partner import PartnerRole
 
 emsprouter = APIRouter()
 cporouter = APIRouter()
@@ -106,6 +107,7 @@ async def get_location(
         country_code: str,
         party_id: str,
         location_id: str,
+        partner: PartnerProfile = Depends(get_current_partner),
         session: AsyncSession = Depends(get_session)
 ):
     # Use joinedload to ensure the data is fetched from the DB
@@ -147,6 +149,7 @@ async def get_evse(
         party_id: str,
         location_id: str,
         evse_uid: str,
+        partner: PartnerProfile = Depends(get_current_partner),
         session: AsyncSession = Depends(get_session)
 ):
     # Use joinedload to ensure the data is fetched from the DB
@@ -184,6 +187,7 @@ async def put_location(
         party_id: str,
         location_id: str,
         raw_data: dict,
+        partner = Depends(validate_role(PartnerRole.CPO)),
         session: AsyncSession = Depends(get_session)
 ):
 
@@ -202,6 +206,7 @@ async def patch_location(
         party_id: str,
         location_id: str,
         patch_data: dict,
+        partner = Depends(validate_role(PartnerRole.CPO)),
         session: AsyncSession = Depends(get_session)
 ):
     # 1. Get the existing location
@@ -271,6 +276,7 @@ async def patch_evse(
         location_id: str,
         evse_uid: str,
         patch_data: dict,
+        partner = Depends(validate_role(PartnerRole.CPO)),
         session: AsyncSession = Depends(get_session)
 ):
     # 1. Fetch the specific EVSE and verify it belongs to the Location
