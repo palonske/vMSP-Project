@@ -103,6 +103,7 @@ async def credentials_handshake(
     # raise HTTPException(status_code=401, detail="Missing Token A")
     creds_in = InternalRegister(token_a=token_a, versions_url=versions_url)
     #1. Call CPO Version Endpoint
+    print(f"Calling versions url: {versions_url} with token {token_a}.")
     versions = await fetch_cpo_versions(creds_in.versions_url, creds_in.token_a)
     creds_in = await select_cpo_version(creds_in, versions)
 

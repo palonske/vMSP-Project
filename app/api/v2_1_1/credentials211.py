@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Body, status
 from fastapi.security import APIKeyHeader
-from sqlalchemy import update
+from sqlalchemy import update, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 import httpx
 from sqlmodel import select, delete
@@ -17,7 +17,7 @@ cporouter = APIRouter()
 emsprouter = APIRouter()
 header_scheme = APIKeyHeader(name="Authorization", auto_error=False)
 
-async def preregistered_emsp(token, session) -> PartnerProfile:
+async def find_preregistered_emsp(token, session) -> PartnerProfile:
     print(f"Checking if Token A {token} exists in database")
     statement = select(PartnerProfile).where(
         PartnerProfile.token_a == token
@@ -46,7 +46,7 @@ async def register_emsp(
     # Strip the prefix
     token_a = Authorization.replace("Token ", "").replace("token ", "").strip()
 
-    preregistered_partner = await preregistered_emsp(token_a, session)
+    preregistered_partner = await find_preregistered_emsp(token_a, session)
 
     if preregistered_partner and preregistered_partner.status == "REGISTERED":
         token_c = secrets.token_hex(16)
@@ -61,7 +61,7 @@ async def register_emsp(
 
         versions = await fetch_partner_versions(new_partner.versions_url, new_partner.token_b)
         new_partner = await select_partner_version(new_partner, versions)
-        endpoints = await fetch_version_details(new_partner)
+        endpoints = await fetch_version_details(new_partner, new_partner.token_b)
 
         statement = update(PartnerProfile).where(
             PartnerProfile.party_id == preregistered_partner.party_id,
@@ -112,7 +112,7 @@ async def register_emsp(
         print("Token A already registered. Returning Error Response")
 
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
                 detail={
                     "status_code": 3001, # OCPI Client Error: Invalid input
                     "status_message": "Token A Already Registered",
@@ -131,6 +131,132 @@ async def register_emsp(
                 "timestamp": f"{timestamp}"
             }
         )
+
+
+async def find_registered_partner(token, session):
+    print(f"Checking if Token  {token} exists in database")
+    statement = select(PartnerProfile).where(
+        or_(
+            PartnerProfile.token_b == token,
+            PartnerProfile.token_c == token
+        )
+    )
+    result = await session.execute(statement)
+    partner = result.scalar_one_or_none()
+
+    print(f"Found registration: {partner}")
+
+    return partner
+
+
+@cporouter.put("/")
+@emsprouter.put("/")
+async def update_partner(
+        token: str = Body(...),
+        url: str = Body(...),
+        business_details: dict = Body(...),
+        party_id: str = Body(...),
+        country_code: str = Body(...),
+        Authorization: str = Header(header_scheme),
+        session: AsyncSession = Depends(get_session)
+):
+    global updated_partner
+    if not Authorization:
+        raise HTTPException(status_code=401, detail="Missing Authorization Header")
+
+    # Strip the prefix
+
+
+    token_bc = Authorization.replace("Token ", "").replace("token ", "").strip()
+    timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    if await find_preregistered_emsp(token_bc, session):
+        raise HTTPException(
+            status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+            detail={
+                "status_code": 3001, # OCPI Client Error: Invalid input
+                "status_message": "Partner is not registered.",
+                "timestamp": f"{timestamp}"
+            }
+        )
+    elif not await find_registered_partner(token_bc, session):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "status_code": 3001, # OCPI Client Error: Invalid input
+                "status_message": "Unauthorized",
+                "timestamp": f"{timestamp}"
+            }
+        )
+    else:
+        partner = await find_registered_partner(token_bc, session)
+
+        new_token = secrets.token_hex(16)
+
+        print(f"Updating Partner: {partner.country_code}{partner.party_id} with new token {new_token}.")
+
+        if partner.role == PartnerRole.CPO:
+            print(f"Partner {partner.country_code}{partner.party_id} is a CPO")
+            updated_partner = PartnerProfile(token_b=new_token, token_c=token,
+                                         country_code=country_code, party_id=party_id, versions_url=url,
+                                         registered_version="2.1.1",
+                                         business_details=business_details,
+                                         status="ACTIVE", role=PartnerRole.CPO)
+        elif partner.role == PartnerRole.EMSP:
+            print(f"Partner {partner.country_code}{partner.party_id} is an EMSP")
+            updated_partner = PartnerProfile(token_b=token, token_c=new_token,
+                                             country_code=country_code, party_id=party_id, versions_url=url,
+                                             registered_version="2.1.1",
+                                             business_details=business_details,
+                                             status="ACTIVE", role=PartnerRole.EMSP)
+
+        versions = await fetch_partner_versions(updated_partner.versions_url, token_bc)
+        updated_partner = await select_partner_version(updated_partner, versions)
+        endpoints = await fetch_version_details(updated_partner, token_bc)
+
+        statement = update(PartnerProfile).where(
+            PartnerProfile.party_id == partner.party_id,
+            PartnerProfile.country_code == partner.country_code,
+            PartnerProfile.role == partner.role
+        ).values(
+            **updated_partner.model_dump(exclude_unset=True)
+        )
+        try:
+            print(f"Attempting Update: {statement}")
+            await session.execute(statement)
+            await save_module_urls(session, updated_partner, endpoints, updated_partner.registered_version, updated_partner.role)
+
+        except Exception as e:
+            await session.rollback()
+            raise HTTPException(status_code=400, detail=str(e))
+
+        await session.commit()
+
+        return {
+            "status_code": 1000,
+            "status_message": "Success",
+            "timestamp": f"{timestamp}",
+            "data":
+                {
+                    "url": f"{settings.BASE_URL}/ocpi/cpo/versions",
+                    "token": f"{new_token}",
+                    "party_id": "EPS",
+                    "country_code": "US",
+                    "business_details": {
+                        "name": "Eric's vMSP",
+                        "logo": {
+                            "url": "https://example.com/img/logo.jpg",
+                            "thumbnail": "https://example.com/img/logo_thumb.jpg",
+                            "category": "OPERATOR",
+                            "type": "jpeg",
+                            "width": 512,
+                            "height": 512
+                        },
+                        "website": "http://example.com"
+                    }
+                }
+        }
+
 
 async def fetch_partner_versions(versions_url: str, token: str) -> List[dict]:
     """
@@ -175,11 +301,11 @@ async def select_partner_version(partner: PartnerProfile,versions: List[dict]) -
             return partner
     return None
 
-async def fetch_version_details(partner: PartnerProfile) -> Optional[List[Endpoint]]:
+async def fetch_version_details(partner: PartnerProfile, token) -> Optional[List[Endpoint]]:
     """
     Fetches the module list for a specific version and returns the Credentials endpoint.
     """
-    headers = {"Authorization": f"Token {partner.token_b}"}
+    headers = {"Authorization": f"Token {token}"}
 
     async with httpx.AsyncClient() as client:
         response = await client.get(partner.version_detail_url, headers=headers)
