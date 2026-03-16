@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
@@ -191,6 +191,11 @@ async def put_location(
         session: AsyncSession = Depends(get_session)
 ):
 
+    #Checking to see if Partner matches path parameters:
+    if not party_id == partner.party_id and country_code == partner.country_code:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Path parameters do not match registered partner.")
+
+
     try:
         cpo = PartnerProfile(country_code=country_code, party_id=party_id)
         response_json =    await process_location(raw_data, cpo, session)
@@ -209,6 +214,11 @@ async def patch_location(
         partner = Depends(validate_role(PartnerRole.CPO)),
         session: AsyncSession = Depends(get_session)
 ):
+    #Checking to see if Partner matches path parameters:
+    if not party_id == partner.party_id and country_code == partner.country_code:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Path parameters do not match registered partner.")
+
+
     # 1. Get the existing location
     db_location = session.get(Location, location_id)
     if not db_location:
@@ -279,6 +289,11 @@ async def patch_evse(
         partner = Depends(validate_role(PartnerRole.CPO)),
         session: AsyncSession = Depends(get_session)
 ):
+
+    #Checking to see if Partner matches path parameters:
+    if not party_id == partner.party_id and country_code == partner.country_code:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Path parameters do not match registered partner.")
+
     # 1. Fetch the specific EVSE and verify it belongs to the Location
     statement = select(EVSE).where(EVSE.uid == evse_uid, EVSE.location_id == location_id)
     db_evse = session.execute(statement).first()

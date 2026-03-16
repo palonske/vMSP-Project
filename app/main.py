@@ -34,8 +34,13 @@ app.include_router(
     tags=["Locations v2.1.1"]
 )
 app.include_router(
-    tariffs.router,
+    tariffs.emsprouter,
     prefix="/ocpi/emsp/2.1.1/tariffs",
+    tags=["Tariffs v2.1.1"]
+)
+app.include_router(
+    tariffs.cporouter,
+    prefix="/ocpi/cpo/2.1.1/tariffs",
     tags=["Tariffs v2.1.1"]
 )
 app.include_router(

@@ -1,15 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Body, status
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, select
+
+from app.core.authorization import get_current_partner, validate_role
 from app.database import engine, get_session
-from app.models import Tariff, PartnerProfile, TariffType, TariffElement, TariffRestriction, PriceComponent
+from app.models import Tariff, PartnerProfile, TariffType, TariffElement, TariffRestriction, PriceComponent, PartnerRole
 from datetime import datetime, timezone
 from app.api.v2_1_1.schemas import TariffRead
 from app.core.utils import get_timestamp, fix_date
 
-router = APIRouter()
+emsprouter = APIRouter()
+cporouter = APIRouter()
 
 # Helper shared with locations to handle OCPI date formats
 #def fix_date(data_dict):
@@ -78,14 +81,18 @@ async def process_tariff(raw_data: dict, cpo: PartnerProfile, session: AsyncSess
     await session.flush()
     return tariff_obj
 
-@router.put("/{country_code}/{party_id}/{tariff_id}")
+@emsprouter.put("/{country_code}/{party_id}/{tariff_id}")
 async def put_tariff(
         country_code: str,
         party_id: str,
         tariff_id: str,
         tariff_data: dict, # Pydantic validates the body automatically
+        partner = Depends(validate_role(PartnerRole.CPO)),
         session: AsyncSession = Depends(get_session)
 ):
+    #Checking to see if Partner matches path parameters:
+    if not party_id == partner.party_id and country_code == partner.country_code:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Path parameters do not match registered partner.")
 
     try:
         # Use our existing logic to wipe the old and save the new
@@ -93,10 +100,10 @@ async def put_tariff(
 
         tariff_data["id"] = tariff_id
 
-        cpo_profile = PartnerProfile(country_code=country_code, party_id=party_id)
+        #cpo_profile = PartnerProfile(country_code=country_code, party_id=party_id)
 
         async with session.begin_nested():
-            await process_tariff(tariff_data, cpo_profile, session)
+            await process_tariff(tariff_data, partner, session)
 
         await session.commit()
         #timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -109,15 +116,21 @@ async def put_tariff(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to process Tariff: {str(e)}")
 
-@router.patch("/{country_code}/{party_id}/{tariff_id}")
+@emsprouter.patch("/{country_code}/{party_id}/{tariff_id}")
 async def patch_tariff(
         country_code: str,
         party_id: str,
         tariff_id: str,
         patch_data: dict,
+        partner = Depends(validate_role(PartnerRole.CPO)),
         session: AsyncSession = Depends(get_session)
 ):
     # 1. Fetch the existing tariff with all nested data loaded
+
+    #Checking to see if Partner matches path parameters:
+    if not party_id == partner.party_id and country_code == partner.country_code:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Path parameters do not match registered partner.")
+
     statement = (
         select(Tariff)
         .where(
@@ -147,10 +160,10 @@ async def patch_tariff(
     # 4. Reuse your process_tariff logic
     # Since process_tariff handles the delete-and-recreate (idempotency),
     # it works perfectly for the "final state" of a PATCH
-    cpo_profile = PartnerProfile(country_code=country_code, party_id=party_id)
+    #cpo_profile = PartnerProfile(country_code=country_code, party_id=party_id)
 
     async with session.begin_nested():
-        tariff_obj = await process_tariff(updated_full_data, cpo_profile, session)
+        tariff_obj = await process_tariff(updated_full_data, partner, session)
 
     await session.commit()
     #timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -163,8 +176,9 @@ async def patch_tariff(
         "data": [tariff_obj]
     }
 
-@router.get("/", response_model=dict)
-async def get_tariffs(session: AsyncSession = Depends(get_session)):
+@emsprouter.get("/", response_model=dict)
+@cporouter.get("/", response_model=dict)
+async def get_tariffs(partner: PartnerProfile = Depends(get_current_partner),session: AsyncSession = Depends(get_session)):
     # 1. Fetch tariffs with their nested elements
     statement = (
         select(Tariff)
@@ -183,11 +197,13 @@ async def get_tariffs(session: AsyncSession = Depends(get_session)):
         "data": [TariffRead.model_validate(t) for t in tariffs]
     }
 
-@router.get("/{country_code}/{party_id}/{tariff_id}")
+@emsprouter.get("/{country_code}/{party_id}/{tariff_id}")
+@cporouter.get("/{country_code}/{party_id}/{tariff_id}")
 async def get_tariff(
         country_code: str,
         party_id: str,
         tariff_id: str,
+        partner: PartnerProfile = Depends(get_current_partner),
         session: AsyncSession = Depends(get_session)
 ):
     statement = (
