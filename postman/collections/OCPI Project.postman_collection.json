@@ -1,0 +1,810 @@
+{
+  "info": {
+    "_postman_id": "711fdb4f-643a-4e21-bf41-f5c2d98cbd15",
+    "name": "OCPI Project",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "CPO Endpoints",
+      "item": [
+        {
+          "name": "Versions",
+          "item": [
+            {
+              "name": "CPO Versions",
+              "id": "8af878c3-b86e-4f45-ad09-f1ba6cae01af",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token_a}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/ocpi/cpo/versions",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "ocpi",
+                    "cpo",
+                    "versions"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "CPO 2.1.1 Versions",
+              "id": "ad6853f5-57c7-4a19-9eb2-f929da838317",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token_a}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/ocpi/cpo/2.1.1/",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "ocpi",
+                    "cpo",
+                    "2.1.1",
+                    ""
+                  ]
+                }
+              },
+              "response": []
+            }
+          ],
+          "id": "d38bde2a-10ec-4689-892b-7e4325bdcb2c"
+        },
+        {
+          "name": "Credentials",
+          "item": [
+            {
+              "name": "POST Credentials (Register)",
+              "id": "12a335ae-1677-476e-88b5-6acd8c5b5c30",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token 1df658b53e98e3310a4bd86d8d5b6b86",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"abhistesttokenb\",\n  \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/versions\",\n  \"business_details\": {\n    \"name\": \"Example Operator\",\n    \"logo\": {\n      \"url\": \"https://example.com/img/logo.jpg\",\n      \"thumbnail\": \"https://example.com/img/logo_thumb.jpg\",\n      \"category\": \"OPERATOR\",\n      \"type\": \"jpeg\",\n      \"width\": 512,\n      \"height\": 512\n    },\n    \"website\": \"http://example.com\"\n  },\n  \"party_id\": \"ABI\",\n  \"country_code\": \"US\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/ocpi/cpo/2.1.1/credentials/",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "ocpi",
+                    "cpo",
+                    "2.1.1",
+                    "credentials",
+                    ""
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "PUT Credentials (Update)",
+              "id": "040b69d6-c39e-4cc4-9b1a-5ed8e0de9835",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token abhisnewesttoken",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"abhisnewesttokenv2\",\n  \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/versions\",\n  \"business_details\": {\n    \"name\": \"Example Operator\",\n    \"logo\": {\n      \"url\": \"https://example.com/img/logo.jpg\",\n      \"thumbnail\": \"https://example.com/img/logo_thumb.jpg\",\n      \"category\": \"OPERATOR\",\n      \"type\": \"jpeg\",\n      \"width\": 512,\n      \"height\": 512\n    },\n    \"website\": \"http://example.com\"\n  },\n  \"party_id\": \"ABI\",\n  \"country_code\": \"US\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/ocpi/cpo/2.1.1/credentials/",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "ocpi",
+                    "cpo",
+                    "2.1.1",
+                    "credentials",
+                    ""
+                  ]
+                }
+              },
+              "response": []
+            }
+          ],
+          "id": "36bebe25-dc50-4c88-8f73-4ac02c9c5552"
+        },
+        {
+          "name": "Locations",
+          "item": [
+            {
+              "name": "Get Locations",
+              "id": "7114ccd9-f6a7-463a-bcb1-b8316f0ec54c",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{AUTH}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/cpo/2.1.1/locations/",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "cpo",
+                    "2.1.1",
+                    "locations",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "radius",
+                      "value": "5",
+                      "disabled": true
+                    },
+                    {
+                      "key": "limit",
+                      "value": "500",
+                      "disabled": true
+                    },
+                    {
+                      "key": "offset",
+                      "value": "1500",
+                      "disabled": true
+                    },
+                    {
+                      "key": "date_to",
+                      "value": "2024-11-27T22:52:00Z",
+                      "disabled": true
+                    },
+                    {
+                      "key": "date_from",
+                      "value": "2024-12-01T03:21:36Z",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "PUT Locations",
+              "id": "88143195-1aea-4eb3-8bc7-5b44a6bda0c1",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            }
+          ],
+          "id": "85c2d234-19d1-4246-96b0-f51f57113769"
+        },
+        {
+          "name": "Tariffs",
+          "item": [
+            {
+              "name": "GET Tariffs",
+              "id": "b97ad0ec-2da3-47fb-bd5b-87f6f0cc9626",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{AUTH}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/cpo/2.1.1/tariffs/",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "cpo",
+                    "2.1.1",
+                    "tariffs",
+                    ""
+                  ]
+                }
+              },
+              "response": []
+            }
+          ],
+          "id": "cb687cdd-4add-4047-8b38-5adb4e028958"
+        }
+      ],
+      "id": "52c7e186-4fa2-4b99-a786-b60276fda11f"
+    },
+    {
+      "name": "Registration",
+      "item": [
+        {
+          "name": "Internal CPO Registration",
+          "id": "0fd4bebb-1810-49f2-8355-2375f2134c11",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "ADMINTOKEN",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://127.0.0.1:8000/ocpi/internal_cpo_register?token_a=TestTokenA&versions_url=https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/versions",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "port": "8000",
+              "path": [
+                "ocpi",
+                "internal_cpo_register"
+              ],
+              "query": [
+                {
+                  "key": "token_a",
+                  "value": "TestTokenA"
+                },
+                {
+                  "key": "versions_url",
+                  "value": "https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/versions"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "698339a7-a8ff-40f4-a6d9-a02a08bf9da4"
+    },
+    {
+      "name": "EMSP Endpoints",
+      "item": [
+        {
+          "name": "Versions",
+          "item": [
+            {
+              "name": "EMSP Versions",
+              "id": "98e78dca-5509-48c6-80ee-d59561f7e11e",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token_a}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/ocpi/emsp/versions",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "ocpi",
+                    "emsp",
+                    "versions"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "EMSP 2.1.1 Versions",
+              "id": "28de280c-1dd2-4538-a606-ebb9f98ac2bc",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{token_a}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/ocpi/emsp/2.1.1/",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "ocpi",
+                    "emsp",
+                    "2.1.1",
+                    ""
+                  ]
+                }
+              },
+              "response": []
+            }
+          ],
+          "id": "566bf4db-31d1-4fb6-8e9f-3a73f3fb3ee0"
+        },
+        {
+          "name": "Credentials",
+          "item": [
+            {
+              "name": "PUT Credentials (Update)",
+              "id": "6fcf42a7-a533-4c34-abed-697de695339b",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token 2cb24e41be9d100b895901545a4ff449",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"mynewupdate\",\n  \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/versions\",\n  \"business_details\": {\n    \"name\": \"Example Operator\",\n    \"logo\": {\n      \"url\": \"https://example.com/img/logo.jpg\",\n      \"thumbnail\": \"https://example.com/img/logo_thumb.jpg\",\n      \"category\": \"OPERATOR\",\n      \"type\": \"jpeg\",\n      \"width\": 512,\n      \"height\": 512\n    },\n    \"website\": \"http://example.com\"\n  },\n  \"party_id\": \"EXA\",\n  \"country_code\": \"US\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/ocpi/emsp/2.1.1/credentials/",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "ocpi",
+                    "emsp",
+                    "2.1.1",
+                    "credentials",
+                    ""
+                  ]
+                }
+              },
+              "response": []
+            }
+          ],
+          "id": "33e1280b-f06a-4393-8093-25a66dfc219c"
+        },
+        {
+          "name": "Locations",
+          "item": [],
+          "id": "956b1534-9669-4b73-b0a9-a86d6ea51730"
+        },
+        {
+          "name": "Tariffs",
+          "item": [
+            {
+              "name": "PATCH Tariffs",
+              "id": "08ac659f-2110-49cc-b0ec-d9bb0095b8e2",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{AUTH}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"id\": \"b55c8261249104fbaf87a671fc5a90c9\",\n    \"currency\": \"USD\",\n    \"elements\": [\n        {\n            \"restrictions\": {\n                \"start_time\": \"00:00\",\n                \"end_time\": \"23:00\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 100,\n                    \"step_size\": 60\n                }\n            ]\n        }\n    ],\n    \"tariff_alt_text\": [\n        {\n            \"language\": \"en\",\n            \"text\": \"Walk-Up: Group 100 DC\"\n        }\n    ],\n    \"last_updated\": \"2026-03-03T01:38:45Z\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/emsp/2.1.1/tariffs/{{party_id}}/{{party_id}}/:tariff_id",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "emsp",
+                    "2.1.1",
+                    "tariffs",
+                    "{{party_id}}",
+                    "{{party_id}}",
+                    ":tariff_id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "tariff_id",
+                      "value": "b55c8261249104fbaf87a671fc5a90c9"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "PUT Tariffs",
+              "id": "bf4af317-938f-4e84-b69c-cf4bb24668cf",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{AUTH}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"id\": \"b55c8261249104fbaf87a671fc5a90c9\",\n    \"currency\": \"USD\",\n    \"elements\": [\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:01\",\n                \"end_time\": \"23:02\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:03\",\n                \"end_time\": \"23:04\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:05\",\n                \"end_time\": \"23:06\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:07\",\n                \"end_time\": \"23:08\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:09\",\n                \"end_time\": \"23:10\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:11\",\n                \"end_time\": \"23:12\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:13\",\n                \"end_time\": \"23:14\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:15\",\n                \"end_time\": \"23:16\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:17\",\n                \"end_time\": \"23:18\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:19\",\n                \"end_time\": \"23:20\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:21\",\n                \"end_time\": \"23:22\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:23\",\n                \"end_time\": \"23:24\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:25\",\n                \"end_time\": \"23:26\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:27\",\n                \"end_time\": \"23:28\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:29\",\n                \"end_time\": \"23:30\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:31\",\n                \"end_time\": \"23:32\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:33\",\n                \"end_time\": \"23:34\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:35\",\n                \"end_time\": \"23:36\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:37\",\n                \"end_time\": \"23:38\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:39\",\n                \"end_time\": \"23:40\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:41\",\n                \"end_time\": \"23:42\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:43\",\n                \"end_time\": \"23:44\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:45\",\n                \"end_time\": \"23:59\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"00:00\",\n                \"end_time\": \"23:59\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"MONDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"00:00\",\n                \"end_time\": \"23:59\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"TUESDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"00:00\",\n                \"end_time\": \"23:59\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"WEDNESDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"00:00\",\n                \"end_time\": \"23:59\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"THURSDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"00:00\",\n                \"end_time\": \"23:59\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"FRIDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"00:00\",\n                \"end_time\": \"23:00\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:01\",\n                \"end_time\": \"23:02\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:03\",\n                \"end_time\": \"23:04\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:05\",\n                \"end_time\": \"23:06\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:07\",\n                \"end_time\": \"23:08\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:09\",\n                \"end_time\": \"23:10\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:11\",\n                \"end_time\": \"23:12\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:13\",\n                \"end_time\": \"23:14\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:15\",\n                \"end_time\": \"23:16\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:17\",\n                \"end_time\": \"23:18\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:19\",\n                \"end_time\": \"23:20\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:21\",\n                \"end_time\": \"23:22\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:23\",\n                \"end_time\": \"23:24\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:25\",\n                \"end_time\": \"23:26\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:27\",\n                \"end_time\": \"23:28\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:29\",\n                \"end_time\": \"23:30\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:31\",\n                \"end_time\": \"23:32\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:33\",\n                \"end_time\": \"23:34\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:35\",\n                \"end_time\": \"23:36\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:37\",\n                \"end_time\": \"23:38\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"23:39\",\n                \"end_time\": \"23:59\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SATURDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        },\n        {\n            \"restrictions\": {\n                \"start_time\": \"00:00\",\n                \"end_time\": \"23:00\",\n                \"min_duration\": 0,\n                \"max_duration\": 86400,\n                \"day_of_week\": [\n                    \"SUNDAY\"\n                ]\n            },\n            \"price_components\": [\n                {\n                    \"type\": \"TIME\",\n                    \"price\": 21.0,\n                    \"step_size\": 60\n                }\n            ]\n        }\n    ],\n    \"tariff_alt_text\": [\n        {\n            \"language\": \"en\",\n            \"text\": \"Walk-Up: Group 3 DC\"\n        }\n    ],\n    \"last_updated\": \"2026-03-03T01:38:45Z\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/emsp/2.1.1/tariffs/{{country_code}}/{{party_id}}/:tariff_id",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "emsp",
+                    "2.1.1",
+                    "tariffs",
+                    "{{country_code}}",
+                    "{{party_id}}",
+                    ":tariff_id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "tariff_id",
+                      "value": "b55c8261249104fbaf87a671fc5a90c9"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ],
+          "id": "6ff88b0a-1c27-4482-8fef-4200bc3a1cf5"
+        }
+      ],
+      "id": "9ac66893-eef3-4748-85ff-bb8ae923726e"
+    },
+    {
+      "name": "Mock Endpoints",
+      "item": [
+        {
+          "name": "/ocpi/cpo/2.1.1/credentials",
+          "id": "4a13898e-4148-4195-9ae3-6ffbdd1e05a8",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{mock_url}}//ocpi/cpo/2.1.1/credentials",
+              "host": [
+                "{{mock_url}}"
+              ],
+              "path": [
+                "",
+                "ocpi",
+                "cpo",
+                "2.1.1",
+                "credentials"
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "c9fca293-7635-47d3-bbf8-0856e8a43d0a",
+              "name": "Default",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{mock_url}}//ocpi/cpo/2.1.1/credentials",
+                  "host": [
+                    "{{mock_url}}"
+                  ],
+                  "path": [
+                    "",
+                    "ocpi",
+                    "cpo",
+                    "2.1.1",
+                    "credentials"
+                  ]
+                }
+              },
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": null,
+              "cookie": [],
+              "body": "{\n  \"status_code\": 1000,\n  \"status_message\": \"Success\",\n  \"timestamp\": \"2026-03-03T20:57:59.917537Z\",\n  \"data\":\n    {\n      \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/versions/\",\n      \"token\": \"test_token_1234\",\n      \"party_id\": \"EXA\",\n      \"country_code\": \"US\",\n      \"business_details\": {\n        \"name\": \"Example Operator\",\n        \"logo\": {\n          \"url\": \"https://example.com/img/logo.jpg\",\n          \"thumbnail\": \"https://example.com/img/logo_thumb.jpg\",\n          \"category\": \"OPERATOR\",\n          \"type\": \"jpeg\",\n          \"width\": 512,\n          \"height\": 512\n        },\n        \"website\": \"http://example.com\"\n      }\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "/ocpi/emsp/versions",
+          "id": "090f94f4-55d1-49bc-b30b-2112f84810a1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{mock_url}}/ocpi/emsp/versions",
+              "host": [
+                "{{mock_url}}"
+              ],
+              "path": [
+                "ocpi",
+                "emsp",
+                "versions"
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "4601399c-38e0-403a-9f0e-430a9a011c5c",
+              "name": "Default",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mock_url}}//ocpi/emsp/versions",
+                  "host": [
+                    "{{mock_url}}"
+                  ],
+                  "path": [
+                    "",
+                    "ocpi",
+                    "emsp",
+                    "versions"
+                  ]
+                }
+              },
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": null,
+              "cookie": [],
+              "body": "{\n    \"status_code\": 1000,\n    \"status_message\": \"Success\",\n    \"timestamp\": \"2026-03-03T20:57:59.917537Z\",\n    \"data\": [\n        {\n            \"version\": \"2.1.1\",\n            \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/2.1.1\"\n        },\n                {\n            \"version\": \"2.2.1\",\n            \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/2.2.1\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "/ocpi/emsp/2.1.1",
+          "id": "7ccf97f5-e6c0-4453-a856-5d4ea50db36d",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{mock_url}}//ocpi/emsp/2.1.1",
+              "host": [
+                "{{mock_url}}"
+              ],
+              "path": [
+                "",
+                "ocpi",
+                "emsp",
+                "2.1.1"
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "8e91ac49-2866-4a1d-9b0b-2d0334fab857",
+              "name": "Default",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mock_url}}//ocpi/emsp/2.1.1",
+                  "host": [
+                    "{{mock_url}}"
+                  ],
+                  "path": [
+                    "",
+                    "ocpi",
+                    "emsp",
+                    "2.1.1"
+                  ]
+                }
+              },
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": null,
+              "cookie": [],
+              "body": "{\n  \"status_code\": 1000,\n  \"status_message\": \"Success\",\n  \"timestamp\": \"2026-03-03T20:57:59.917537Z\",\n  \"data\": \n    {\n      \"version\": \"2.1.1\",\n      \"endpoints\": [\n        {\n          \"identifier\": \"credentials\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/2.1.1/credentials/\"\n        },\n        {\n          \"identifier\": \"locations\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/2.1.1/locations/\"\n        },\n                {\n          \"identifier\": \"tariffs\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/2.1.1/tariffs/\"\n        },\n                {\n          \"identifier\": \"commands\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/2.1.1/commands/\"\n        },\n                {\n          \"identifier\": \"sessions\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/2.1.1/sessions/\"\n        },\n                {\n          \"identifier\": \"cdrs\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/2.1.1/cdrs/\"\n        }\n      ]\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "/ocpi/cpo/versions",
+          "id": "f7e8e91e-5b6b-4e22-914c-694fd45b004b",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{mock_url}}//ocpi/cpo/versions",
+              "host": [
+                "{{mock_url}}"
+              ],
+              "path": [
+                "",
+                "ocpi",
+                "cpo",
+                "versions"
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "01033418-de56-4690-a60f-2b2be5b68b09",
+              "name": "Default",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mock_url}}//ocpi/cpo/versions",
+                  "host": [
+                    "{{mock_url}}"
+                  ],
+                  "path": [
+                    "",
+                    "ocpi",
+                    "cpo",
+                    "versions"
+                  ]
+                }
+              },
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": null,
+              "cookie": [],
+              "body": "{\n    \"status_code\": 1000,\n    \"status_message\": \"Success\",\n    \"timestamp\": \"2026-03-03T20:57:59.917537Z\",\n    \"data\": [\n        {\n            \"version\": \"2.1.1\",\n            \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/2.1.1\"\n        },\n                {\n            \"version\": \"2.2.1\",\n            \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/2.2.1\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "/ocpi/cpo/2.1.1",
+          "id": "51662745-0bfc-4942-bd4b-971d9f7d0c1e",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{mock_url}}//ocpi/cpo/2.1.1",
+              "host": [
+                "{{mock_url}}"
+              ],
+              "path": [
+                "",
+                "ocpi",
+                "cpo",
+                "2.1.1"
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "06219b8e-52ec-42c3-8b7e-bda39d7019d7",
+              "name": "Default",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{mock_url}}//ocpi/cpo/2.1.1",
+                  "host": [
+                    "{{mock_url}}"
+                  ],
+                  "path": [
+                    "",
+                    "ocpi",
+                    "cpo",
+                    "2.1.1"
+                  ]
+                }
+              },
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": null,
+              "cookie": [],
+              "body": "{\n  \"status_code\": 1000,\n  \"status_message\": \"Success\",\n  \"timestamp\": \"2026-03-03T20:57:59.917537Z\",\n  \"data\": \n    {\n      \"version\": \"2.1.1\",\n      \"endpoints\": [\n        {\n          \"identifier\": \"credentials\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/2.1.1/credentials/\"\n        },\n        {\n          \"identifier\": \"locations\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/2.1.1/locations/\"\n        },\n                {\n          \"identifier\": \"tariffs\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/2.1.1/tariffs/\"\n        },\n                {\n          \"identifier\": \"commands\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/2.1.1/commands/\"\n        },\n                {\n          \"identifier\": \"sessions\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/2.1.1/sessions/\"\n        },\n                {\n          \"identifier\": \"cdrs\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/2.1.1/cdrs/\"\n        }\n      ]\n    }\n}"
+            }
+          ]
+        }
+      ],
+      "id": "1214190d-b61f-4556-bb3d-fd2019bd23b5"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "id": "365b1559-ee8b-4eb6-b12e-8ebb01cd4664",
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "id": "ceeb4a74-0755-469b-8b7f-7b84b41a8ccd",
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "id": "383ae53b-e049-4718-baa3-1431d076e99e",
+      "key": "mock_url",
+      "value": "https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io",
+      "type": "string"
+    },
+    {
+      "id": "2ccb7b9a-858f-4d3e-8fbd-22e2ba7132f3",
+      "key": "country_code",
+      "value": "US"
+    },
+    {
+      "id": "3c89f175-21e5-4d4b-b67f-29d850123e8d",
+      "key": "party_id",
+      "value": "EVG"
+    },
+    {
+      "id": "22c0c4bd-8bd2-4766-b4de-30aadb761cad",
+      "key": "token_a",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
