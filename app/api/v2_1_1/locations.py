@@ -2,14 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
-from sqlmodel import Session, select
-from app.core.utils import fix_date, get_timestamp
+from sqlmodel import Session, select, and_
+from app.core.utils import fix_date, get_timestamp, get_roaming_partners
 from app.core.authorization import get_current_partner, validate_role
 from app.database import engine, get_session
-from app.models import Location, EVSE, Connector, PartnerProfile
+from app.models import Location, EVSE, Connector, PartnerProfile, RoamingAgreement
 from datetime import datetime
 from app.api.v2_1_1.schemas import LocationRead, EVSERead, ConnectorRead, EVSEUpdate
 from app.models.partner import PartnerRole
+from app.models.roaming_agreement import AgreementStatus
 
 emsprouter = APIRouter()
 cporouter = APIRouter()
@@ -79,14 +80,48 @@ async def process_location(raw_data: dict, cpo: PartnerProfile, session: AsyncSe
 async def get_locations(partner: PartnerProfile = Depends(get_current_partner),session: AsyncSession = Depends(get_session)):
     # Select all location records
 
-    print(f"Partner {partner.country_code}{partner.party_id} is requesting locations.")
-
-    statement = (
-        select(Location)
-        .options(
-            selectinload(Location.evses).selectinload(EVSE.connectors)
+    print(f"Partner {partner.country_code}{partner.party_id} is requesting locations as {partner.role}.")
+    if partner.role == PartnerRole.CPO:
+        statement = (
+            select(Location)
+            .where(
+                and_(Location.party_id == partner.party_id,
+                   Location.country_code == partner.country_code))
+            .options(
+                joinedload(Location.evses)
+                .joinedload(EVSE.connectors)
+            )
         )
-    )
+    elif partner.role == PartnerRole.EMSP:
+        #Check Roaming Partner Permissions
+        partners = await get_roaming_partners(partner, session)
+
+        statement = (
+            select(Location)
+            .join(
+                RoamingAgreement,
+                and_(
+                    Location.country_code == RoamingAgreement.cpo_country_code,
+                    Location.party_id == RoamingAgreement.cpo_party_id
+                )
+            )
+            .where(
+                # 1. Match the eMSP who is asking
+                RoamingAgreement.emsp_country_code == partner.country_code,
+                RoamingAgreement.emsp_party_id == partner.party_id,
+
+                # 2. Check that the agreement is active
+                RoamingAgreement.status == AgreementStatus.ACTIVE,
+
+                # 3. Check that they are allowed to see locations
+                RoamingAgreement.location_enabled == True
+            )
+            .options(
+                selectinload(Location.evses).selectinload(EVSE.connectors)
+            )
+        )
+
+    print(f"Executing statement: {statement}")
     result = await session.execute(statement)
     locations = result.unique().all()
 
