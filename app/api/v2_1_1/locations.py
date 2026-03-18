@@ -25,6 +25,7 @@ async def process_location(raw_data: dict, cpo: PartnerProfile, session: AsyncSe
     raw_data["country_code"] = cpo.country_code
     raw_data["party_id"] = cpo.party_id
 
+
     try:
         validated_loc = LocationRead.model_validate(raw_data)
         location_id = validated_loc.id
@@ -39,6 +40,7 @@ async def process_location(raw_data: dict, cpo: PartnerProfile, session: AsyncSe
         Location.country_code == cpo.country_code,
         Location.party_id == cpo.party_id
     )
+    print(f"Running statement to find match: {statement}")
     result = await session.execute(statement)
     existing_loc = result.scalars().first()
 
@@ -70,6 +72,7 @@ async def process_location(raw_data: dict, cpo: PartnerProfile, session: AsyncSe
 
     session.add(location_obj)
     await session.flush()
+    await session.commit()
 
     return {"status_code": 1000, "status_message": "Success", "data": f"{[location_obj.id]} stored successfully."}
 
@@ -181,7 +184,7 @@ async def get_evse(
         "data": data_as_schema  # <-- LocationRead will now see 'evses'
     }
 
-@cporouter.put("/{country_code}/{party_id}/{location_id}")
+@emsprouter.put("/{country_code}/{party_id}/{location_id}")
 async def put_location(
         country_code: str,
         party_id: str,
@@ -197,7 +200,8 @@ async def put_location(
 
 
     try:
-        cpo = PartnerProfile(country_code=country_code, party_id=party_id)
+        #cpo = PartnerProfile(country_code=country_code, party_id=party_id)
+        cpo = partner
         response_json =    await process_location(raw_data, cpo, session)
         return response_json
     except Exception as e:
