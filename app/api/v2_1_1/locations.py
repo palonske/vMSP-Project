@@ -318,7 +318,7 @@ async def patch_location(
         "data": [db_location.id]
     }
 
-@cporouter.patch("/{country_code}/{party_id}/{location_id}/{evse_uid}")
+@emsprouter.patch("/{country_code}/{party_id}/{location_id}/{evse_uid}")
 async def patch_evse(
         country_code: str,
         party_id: str,
