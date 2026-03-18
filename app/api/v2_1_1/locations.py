@@ -126,7 +126,7 @@ async def get_locations(partner: PartnerProfile = Depends(get_current_partner),s
 
     print(f"Executing statement: {statement}")
     result = await session.execute(statement)
-    locations = result.unique().all()
+    locations = result.unique().scalars().all()
 
     data_as_schema = [LocationRead.model_validate(loc) for loc in locations]
 
