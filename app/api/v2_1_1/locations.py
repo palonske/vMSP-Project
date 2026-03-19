@@ -6,7 +6,7 @@ from sqlmodel import Session, select, and_
 from app.core.utils import fix_date, get_timestamp, get_roaming_partners, check_roaming_permission
 from app.core.authorization import get_current_partner, validate_role
 from app.database import engine, get_session
-from app.models import Location, EVSE, Connector, PartnerProfile, RoamingAgreement
+from app.models import Location, EVSE, Connector, PartnerProfile, RoamingAgreement, location
 from datetime import datetime
 from app.api.v2_1_1.schemas import LocationRead, EVSERead, ConnectorRead, EVSEUpdate
 from app.models.partner import PartnerRole
@@ -213,12 +213,12 @@ async def get_evse(
         if not evse:
             raise HTTPException(status_code=404, detail="Location not found")
 
-        if partner.role == PartnerRole.EMSP and not (await check_roaming_permission(session, location.party_id, location.country_code, partner.party_id, partner.country_code)):
+        if partner.role == PartnerRole.EMSP and not (await check_roaming_permission(session, evse.location.party_id, evse.location.country_code, partner.party_id, partner.country_code)):
             raise HTTPException(status_code=404, detail="Location not found")
         if partner.role == PartnerRole.CPO and evse.location.party_id != partner.party_id:
             raise HTTPException(status_code=404, detail="Location not found")
-    except:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Bad Request")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Bad Request: {e}")
 
     # We return the OCPI wrapper.
     # FastAPI will use 'LocationRead' logic to fill the 'data' field.

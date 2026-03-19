@@ -85,5 +85,5 @@ async def check_roaming_permission(session: AsyncSession, cpo_id, cpo_cc, emsp_i
 
     # 3. Execute and get the scalar (True/False)
     result = await session.execute(statement)
-    print(f"Result is: {result}")
+    #print(f"Result is: {result}")
     return result.scalar() or False
