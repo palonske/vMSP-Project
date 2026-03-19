@@ -3,7 +3,7 @@ from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, select, and_
-from app.core.utils import fix_date, get_timestamp, get_roaming_partners
+from app.core.utils import fix_date, get_timestamp, get_roaming_partners, check_roaming_permission
 from app.core.authorization import get_current_partner, validate_role
 from app.database import engine, get_session
 from app.models import Location, EVSE, Connector, PartnerProfile, RoamingAgreement
@@ -139,11 +139,9 @@ async def get_locations(partner: PartnerProfile = Depends(get_current_partner),s
 
 
 # --- GET SPECIFIC LOCATION ---
-@cporouter.get("/{country_code}/{party_id}/{location_id}", response_model=dict)
-@emsprouter.get("/{country_code}/{party_id}/{location_id}", response_model=dict)
+@cporouter.get("/{location_id}", response_model=dict)
+@emsprouter.get("/{location_id}", response_model=dict)
 async def get_location(
-        country_code: str,
-        party_id: str,
         location_id: str,
         partner: PartnerProfile = Depends(get_current_partner),
         session: AsyncSession = Depends(get_session)
@@ -158,7 +156,8 @@ async def get_location(
         )
     )
 
-    location = session.execute(statement).unique().first()
+    result = await session.execute(statement)
+    location = result.unique().scalars().first()
 
     print(f"DEBUG: Found Location {location.id}")
     print(f"DEBUG: Number of EVSEs found: {len(location.evses)}")
@@ -166,6 +165,11 @@ async def get_location(
         print(f"DEBUG: EVSE {e.uid} has {len(e.connectors)} connectors")
 
     if not location:
+        raise HTTPException(status_code=404, detail="Location not found")
+
+    if partner.role == PartnerRole.EMSP and not (await check_roaming_permission(session, location.party_id, location.country_code, partner.party_id, partner.country_code)):
+        raise HTTPException(status_code=404, detail="Location not found")
+    if partner.role == PartnerRole.CPO and location.party_id != partner.party_id:
         raise HTTPException(status_code=404, detail="Location not found")
 
     # We return the OCPI wrapper.
@@ -180,32 +184,41 @@ async def get_location(
     }
 
 # --- GET SPECIFIC EVSE ---
-@cporouter.get("/{country_code}/{party_id}/{location_id}/{evse_uid}", response_model=dict)
-@emsprouter.get("/{country_code}/{party_id}/{location_id}/{evse_uid}", response_model=dict)
+@cporouter.get("/{location_id}/{evse_uid}", response_model=dict)
+@emsprouter.get("/{location_id}/{evse_uid}", response_model=dict)
 async def get_evse(
-        country_code: str,
-        party_id: str,
         location_id: str,
         evse_uid: str,
         partner: PartnerProfile = Depends(get_current_partner),
         session: AsyncSession = Depends(get_session)
 ):
     # Use joinedload to ensure the data is fetched from the DB
-    statement = (
-        select(EVSE)
-        .where(EVSE.uid == evse_uid)
-        .where(EVSE.location_id == location_id)
-        .options(
-            joinedload(EVSE.connectors)
+    try:
+        statement = (
+            select(EVSE)
+            .join(Location, EVSE.location_id == Location.id) # 1. The Join for filtering/logic
+            .where(EVSE.uid == evse_uid)
+            .where(EVSE.location_id == location_id)
+            .options(
+                joinedload(EVSE.location),    # 2. Load the Location object into evse.location
+                joinedload(EVSE.connectors)   # Keep your existing connector loading
+            )
         )
-    )
 
-    evse = session.execute(statement).unique().first()
+        result = await session.execute(statement)
+        evse = result.unique().scalars().first()
 
-    print(f"DEBUG: Found EVSE {evse.uid}")
+        print(f"DEBUG: Found EVSE {evse.uid}")
 
-    if not evse:
-        raise HTTPException(status_code=404, detail="Location not found")
+        if not evse:
+            raise HTTPException(status_code=404, detail="Location not found")
+
+        if partner.role == PartnerRole.EMSP and not (await check_roaming_permission(session, location.party_id, location.country_code, partner.party_id, partner.country_code)):
+            raise HTTPException(status_code=404, detail="Location not found")
+        if partner.role == PartnerRole.CPO and evse.location.party_id != partner.party_id:
+            raise HTTPException(status_code=404, detail="Location not found")
+    except:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Bad Request")
 
     # We return the OCPI wrapper.
     # FastAPI will use 'LocationRead' logic to fill the 'data' field.

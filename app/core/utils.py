@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from typing import Optional, List
-
+from sqlalchemy import exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Session, select, and_
 
 from app.models import PartnerProfile, PartnerRole, RoamingAgreement
+from app.models.roaming_agreement import AgreementStatus
 
 
 def fix_date(data_dict):
@@ -63,3 +64,26 @@ async def get_roaming_partners(partner: PartnerProfile, session: AsyncSession) -
         formatted_partners = [f"{p.country_code}{p.party_id}" for p in partners]
         print(f"Found {len(partners)} Roaming Agreements: {formatted_partners}")
         return partners
+
+async def check_roaming_permission(session: AsyncSession, cpo_id, cpo_cc, emsp_id, emsp_cc) -> bool:
+    # 1. Create a subquery that looks for the agreement
+
+    print(f"Checking if roaming agreement exists between CPO: {cpo_cc}{cpo_id} and EMSP: {emsp_cc}{emsp_id}")
+    subquery = select(RoamingAgreement).where(
+        and_(
+            RoamingAgreement.emsp_country_code == emsp_cc,
+            RoamingAgreement.emsp_party_id == emsp_id,
+            RoamingAgreement.cpo_country_code == cpo_cc,
+            RoamingAgreement.cpo_party_id == cpo_id,
+            RoamingAgreement.status == AgreementStatus.ACTIVE,
+            RoamingAgreement.location_enabled == True  # Or whichever permission you are checking
+        )
+    )
+
+    # 2. Wrap it in exists()
+    statement = select(exists(subquery))
+
+    # 3. Execute and get the scalar (True/False)
+    result = await session.execute(statement)
+    print(f"Result is: {result}")
+    return result.scalar() or False
