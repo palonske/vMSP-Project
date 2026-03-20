@@ -2,14 +2,16 @@ from fastapi import APIRouter, Depends, HTTPException, Body, status
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
-from sqlmodel import Session, select
+from sqlmodel import Session, select, and_
 
 from app.core.authorization import get_current_partner, validate_role
 from app.database import engine, get_session
-from app.models import Tariff, PartnerProfile, TariffType, TariffElement, TariffRestriction, PriceComponent, PartnerRole
+from app.models import Tariff, PartnerProfile, TariffType, TariffElement, TariffRestriction, PriceComponent, \
+    PartnerRole, RoamingAgreement
 from datetime import datetime, timezone
 from app.api.v2_1_1.schemas import TariffRead
-from app.core.utils import get_timestamp, fix_date
+from app.core.utils import get_timestamp, fix_date, get_roaming_partners, check_roaming_permission
+from app.models.roaming_agreement import AgreementStatus
 
 emsprouter = APIRouter()
 cporouter = APIRouter()
@@ -180,15 +182,52 @@ async def patch_tariff(
 @cporouter.get("/", response_model=dict)
 async def get_tariffs(partner: PartnerProfile = Depends(get_current_partner),session: AsyncSession = Depends(get_session)):
     # 1. Fetch tariffs with their nested elements
-    statement = (
-        select(Tariff)
-        .options(
-            selectinload(Tariff.elements).selectinload(TariffElement.price_components),
-            selectinload(Tariff.elements).selectinload(TariffElement.restrictions)
+
+    if partner.role == PartnerRole.CPO:
+        statement = (
+            select(Tariff)
+            .where(
+                and_(Tariff.party_id == partner.party_id,
+                     Tariff.country_code == partner.country_code)
+            )
+            .options(
+                selectinload(Tariff.elements).selectinload(TariffElement.price_components),
+                selectinload(Tariff.elements).selectinload(TariffElement.restrictions)
+            )
         )
-    )
+    elif partner.role == PartnerRole.EMSP:
+        partners = await get_roaming_partners(partner, session)
+
+        statement = (
+            select(Tariff)
+            .join(
+                RoamingAgreement,
+                and_(
+                    Tariff.country_code == RoamingAgreement.cpo_country_code,
+                    Tariff.party_id == RoamingAgreement.cpo_party_id
+                )
+            )
+            .where(
+                # 1. Match the eMSP who is asking
+                RoamingAgreement.emsp_country_code == partner.country_code,
+                RoamingAgreement.emsp_party_id == partner.party_id,
+
+                # 2. Check that the agreement is active
+                RoamingAgreement.status == AgreementStatus.ACTIVE,
+
+                # 3. Check that they are allowed to see locations
+                RoamingAgreement.location_enabled == True
+            )
+            .options(
+                selectinload(Tariff.elements).selectinload(TariffElement.price_components),
+                selectinload(Tariff.elements).selectinload(TariffElement.restrictions)
+            )
+        )
+
+    print(f"Executing statement: {statement}")
+
     result = await session.execute(statement)
-    tariffs = result.scalars().all()
+    tariffs = result.unique().scalars().all()
 
     return {
         "status_code": 1000,
@@ -208,7 +247,9 @@ async def get_tariff(
 ):
     statement = (
         select(Tariff)
-        .where(Tariff.id == tariff_id)
+        .where(Tariff.id == tariff_id,
+               Tariff.country_code == country_code,
+               Tariff.party_id == party_id)
         .options(
             selectinload(Tariff.elements).selectinload(TariffElement.price_components),
             selectinload(Tariff.elements).selectinload(TariffElement.restrictions)
@@ -218,6 +259,11 @@ async def get_tariff(
     tariff = result.scalars().first()
 
     if not tariff:
+        raise HTTPException(status_code=404, detail="Tariff not found")
+
+    if partner.role == PartnerRole.EMSP and not (await check_roaming_permission(session, tariff.party_id, tariff.country_code, partner.party_id, partner.country_code, "tariff_enabled")):
+        raise HTTPException(status_code=404, detail="Tariff not found")
+    if partner.role == PartnerRole.CPO and tariff.party_id != partner.party_id:
         raise HTTPException(status_code=404, detail="Tariff not found")
 
     return {

@@ -78,13 +78,13 @@
                 "header": [
                   {
                     "key": "Authorization",
-                    "value": "Token 1df658b53e98e3310a4bd86d8d5b6b86",
+                    "value": "Token 8f1d60740e2db5d2b8d6ae89f7043113",
                     "type": "text"
                   }
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"token\": \"abhistesttokenb\",\n  \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/versions\",\n  \"business_details\": {\n    \"name\": \"Example Operator\",\n    \"logo\": {\n      \"url\": \"https://example.com/img/logo.jpg\",\n      \"thumbnail\": \"https://example.com/img/logo_thumb.jpg\",\n      \"category\": \"OPERATOR\",\n      \"type\": \"jpeg\",\n      \"width\": 512,\n      \"height\": 512\n    },\n    \"website\": \"http://example.com\"\n  },\n  \"party_id\": \"ABI\",\n  \"country_code\": \"US\"\n}",
+                  "raw": "{\n  \"token\": \"MSPTestToken\",\n  \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/versions\",\n  \"business_details\": {\n    \"name\": \"Example Operator\",\n    \"logo\": {\n      \"url\": \"https://example.com/img/logo.jpg\",\n      \"thumbnail\": \"https://example.com/img/logo_thumb.jpg\",\n      \"category\": \"OPERATOR\",\n      \"type\": \"jpeg\",\n      \"width\": 512,\n      \"height\": 512\n    },\n    \"website\": \"http://example.com\"\n  },\n  \"party_id\": \"MSP\",\n  \"country_code\": \"US\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -92,12 +92,11 @@
                   }
                 },
                 "url": {
-                  "raw": "{{BASE_URL}}/ocpi/cpo/2.1.1/credentials/",
+                  "raw": "{{BASE_URL}}/cpo/2.1.1/credentials/",
                   "host": [
                     "{{BASE_URL}}"
                   ],
                   "path": [
-                    "ocpi",
                     "cpo",
                     "2.1.1",
                     "credentials",
@@ -214,7 +213,10 @@
               "id": "88143195-1aea-4eb3-8bc7-5b44a6bda0c1",
               "request": {
                 "method": "GET",
-                "header": []
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
               },
               "response": []
             }
@@ -227,6 +229,33 @@
             {
               "name": "GET Tariffs",
               "id": "b97ad0ec-2da3-47fb-bd5b-87f6f0cc9626",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{AUTH}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/cpo/2.1.1/tariffs/",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "cpo",
+                    "2.1.1",
+                    "tariffs",
+                    ""
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "GET Specific Tariff",
+              "id": "735579a4-c724-47b7-bfe7-94a17e76d410",
               "request": {
                 "method": "GET",
                 "header": [
@@ -295,6 +324,39 @@
                   "key": "versions_url",
                   "value": "https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/versions"
                 }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Internal MSP Register (Token A)",
+          "id": "b6947ba1-541b-4edf-8e6c-8cdd6529f1cf",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://127.0.0.1:8000/ocpi/internal_msp_register",
+              "protocol": "http",
+              "host": [
+                "127",
+                "0",
+                "0",
+                "1"
+              ],
+              "port": "8000",
+              "path": [
+                "ocpi",
+                "internal_msp_register"
               ]
             }
           },
@@ -524,12 +586,11 @@
               "raw": ""
             },
             "url": {
-              "raw": "{{mock_url}}//ocpi/cpo/2.1.1/credentials",
+              "raw": "{{mock_url}}/ocpi/cpo/2.1.1/credentials",
               "host": [
                 "{{mock_url}}"
               ],
               "path": [
-                "",
                 "ocpi",
                 "cpo",
                 "2.1.1",
@@ -549,12 +610,11 @@
                   "raw": ""
                 },
                 "url": {
-                  "raw": "{{mock_url}}//ocpi/cpo/2.1.1/credentials",
+                  "raw": "{{mock_url}}/ocpi/cpo/2.1.1/credentials",
                   "host": [
                     "{{mock_url}}"
                   ],
                   "path": [
-                    "",
                     "ocpi",
                     "cpo",
                     "2.1.1",
@@ -563,7 +623,7 @@
                 }
               },
               "code": 200,
-              "_postman_previewlanguage": null,
+              "_postman_previewlanguage": "Text",
               "header": null,
               "cookie": [],
               "body": "{\n  \"status_code\": 1000,\n  \"status_message\": \"Success\",\n  \"timestamp\": \"2026-03-03T20:57:59.917537Z\",\n  \"data\":\n    {\n      \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/versions/\",\n      \"token\": \"test_token_1234\",\n      \"party_id\": \"EXA\",\n      \"country_code\": \"US\",\n      \"business_details\": {\n        \"name\": \"Example Operator\",\n        \"logo\": {\n          \"url\": \"https://example.com/img/logo.jpg\",\n          \"thumbnail\": \"https://example.com/img/logo_thumb.jpg\",\n          \"category\": \"OPERATOR\",\n          \"type\": \"jpeg\",\n          \"width\": 512,\n          \"height\": 512\n        },\n        \"website\": \"http://example.com\"\n      }\n    }\n}"
@@ -596,12 +656,11 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{mock_url}}//ocpi/emsp/versions",
+                  "raw": "{{mock_url}}/ocpi/emsp/versions",
                   "host": [
                     "{{mock_url}}"
                   ],
                   "path": [
-                    "",
                     "ocpi",
                     "emsp",
                     "versions"
@@ -609,7 +668,7 @@
                 }
               },
               "code": 200,
-              "_postman_previewlanguage": null,
+              "_postman_previewlanguage": "Text",
               "header": null,
               "cookie": [],
               "body": "{\n    \"status_code\": 1000,\n    \"status_message\": \"Success\",\n    \"timestamp\": \"2026-03-03T20:57:59.917537Z\",\n    \"data\": [\n        {\n            \"version\": \"2.1.1\",\n            \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/2.1.1\"\n        },\n                {\n            \"version\": \"2.2.1\",\n            \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/2.2.1\"\n        }\n    ]\n}"
@@ -623,12 +682,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{mock_url}}//ocpi/emsp/2.1.1",
+              "raw": "{{mock_url}}/ocpi/emsp/2.1.1",
               "host": [
                 "{{mock_url}}"
               ],
               "path": [
-                "",
                 "ocpi",
                 "emsp",
                 "2.1.1"
@@ -643,12 +701,11 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{mock_url}}//ocpi/emsp/2.1.1",
+                  "raw": "{{mock_url}}/ocpi/emsp/2.1.1",
                   "host": [
                     "{{mock_url}}"
                   ],
                   "path": [
-                    "",
                     "ocpi",
                     "emsp",
                     "2.1.1"
@@ -656,7 +713,7 @@
                 }
               },
               "code": 200,
-              "_postman_previewlanguage": null,
+              "_postman_previewlanguage": "Text",
               "header": null,
               "cookie": [],
               "body": "{\n  \"status_code\": 1000,\n  \"status_message\": \"Success\",\n  \"timestamp\": \"2026-03-03T20:57:59.917537Z\",\n  \"data\": \n    {\n      \"version\": \"2.1.1\",\n      \"endpoints\": [\n        {\n          \"identifier\": \"credentials\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/2.1.1/credentials/\"\n        },\n        {\n          \"identifier\": \"locations\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/2.1.1/locations/\"\n        },\n                {\n          \"identifier\": \"tariffs\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/2.1.1/tariffs/\"\n        },\n                {\n          \"identifier\": \"commands\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/2.1.1/commands/\"\n        },\n                {\n          \"identifier\": \"sessions\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/2.1.1/sessions/\"\n        },\n                {\n          \"identifier\": \"cdrs\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/emsp/2.1.1/cdrs/\"\n        }\n      ]\n    }\n}"
@@ -670,12 +727,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{mock_url}}//ocpi/cpo/versions",
+              "raw": "{{mock_url}}/ocpi/cpo/versions",
               "host": [
                 "{{mock_url}}"
               ],
               "path": [
-                "",
                 "ocpi",
                 "cpo",
                 "versions"
@@ -690,12 +746,11 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{mock_url}}//ocpi/cpo/versions",
+                  "raw": "{{mock_url}}/ocpi/cpo/versions",
                   "host": [
                     "{{mock_url}}"
                   ],
                   "path": [
-                    "",
                     "ocpi",
                     "cpo",
                     "versions"
@@ -703,7 +758,7 @@
                 }
               },
               "code": 200,
-              "_postman_previewlanguage": null,
+              "_postman_previewlanguage": "Text",
               "header": null,
               "cookie": [],
               "body": "{\n    \"status_code\": 1000,\n    \"status_message\": \"Success\",\n    \"timestamp\": \"2026-03-03T20:57:59.917537Z\",\n    \"data\": [\n        {\n            \"version\": \"2.1.1\",\n            \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/2.1.1\"\n        },\n                {\n            \"version\": \"2.2.1\",\n            \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/2.2.1\"\n        }\n    ]\n}"
@@ -717,12 +772,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{mock_url}}//ocpi/cpo/2.1.1",
+              "raw": "{{mock_url}}/ocpi/cpo/2.1.1",
               "host": [
                 "{{mock_url}}"
               ],
               "path": [
-                "",
                 "ocpi",
                 "cpo",
                 "2.1.1"
@@ -737,12 +791,11 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{mock_url}}//ocpi/cpo/2.1.1",
+                  "raw": "{{mock_url}}/ocpi/cpo/2.1.1",
                   "host": [
                     "{{mock_url}}"
                   ],
                   "path": [
-                    "",
                     "ocpi",
                     "cpo",
                     "2.1.1"
@@ -750,7 +803,7 @@
                 }
               },
               "code": 200,
-              "_postman_previewlanguage": null,
+              "_postman_previewlanguage": "Text",
               "header": null,
               "cookie": [],
               "body": "{\n  \"status_code\": 1000,\n  \"status_message\": \"Success\",\n  \"timestamp\": \"2026-03-03T20:57:59.917537Z\",\n  \"data\": \n    {\n      \"version\": \"2.1.1\",\n      \"endpoints\": [\n        {\n          \"identifier\": \"credentials\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/2.1.1/credentials/\"\n        },\n        {\n          \"identifier\": \"locations\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/2.1.1/locations/\"\n        },\n                {\n          \"identifier\": \"tariffs\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/2.1.1/tariffs/\"\n        },\n                {\n          \"identifier\": \"commands\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/2.1.1/commands/\"\n        },\n                {\n          \"identifier\": \"sessions\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/2.1.1/sessions/\"\n        },\n                {\n          \"identifier\": \"cdrs\",\n          \"url\": \"https://bf31a14c-600d-41b2-b8f3-e49911de516d.mock.pstmn.io/ocpi/cpo/2.1.1/cdrs/\"\n        }\n      ]\n    }\n}"
@@ -759,28 +812,6 @@
         }
       ],
       "id": "1214190d-b61f-4556-bb3d-fd2019bd23b5"
-    }
-  ],
-  "event": [
-    {
-      "listen": "prerequest",
-      "script": {
-        "id": "365b1559-ee8b-4eb6-b12e-8ebb01cd4664",
-        "type": "text/javascript",
-        "exec": [
-          ""
-        ]
-      }
-    },
-    {
-      "listen": "test",
-      "script": {
-        "id": "ceeb4a74-0755-469b-8b7f-7b84b41a8ccd",
-        "type": "text/javascript",
-        "exec": [
-          ""
-        ]
-      }
     }
   ],
   "variable": [
