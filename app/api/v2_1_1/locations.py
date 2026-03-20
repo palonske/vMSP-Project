@@ -167,7 +167,7 @@ async def get_location(
     if not location:
         raise HTTPException(status_code=404, detail="Location not found")
 
-    if partner.role == PartnerRole.EMSP and not (await check_roaming_permission(session, location.party_id, location.country_code, partner.party_id, partner.country_code)):
+    if partner.role == PartnerRole.EMSP and not (await check_roaming_permission(session, location.party_id, location.country_code, partner.party_id, partner.country_code, "location_enabled")):
         raise HTTPException(status_code=404, detail="Location not found")
     if partner.role == PartnerRole.CPO and location.party_id != partner.party_id:
         raise HTTPException(status_code=404, detail="Location not found")
@@ -213,7 +213,7 @@ async def get_evse(
         if not evse:
             raise HTTPException(status_code=404, detail="Location not found")
 
-        if partner.role == PartnerRole.EMSP and not (await check_roaming_permission(session, evse.location.party_id, evse.location.country_code, partner.party_id, partner.country_code)):
+        if partner.role == PartnerRole.EMSP and not (await check_roaming_permission(session, evse.location.party_id, evse.location.country_code, partner.party_id, partner.country_code, "location_enabled")):
             raise HTTPException(status_code=404, detail="Location not found")
         if partner.role == PartnerRole.CPO and evse.location.party_id != partner.party_id:
             raise HTTPException(status_code=404, detail="Location not found")

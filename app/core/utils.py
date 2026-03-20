@@ -65,7 +65,7 @@ async def get_roaming_partners(partner: PartnerProfile, session: AsyncSession) -
         print(f"Found {len(partners)} Roaming Agreements: {formatted_partners}")
         return partners
 
-async def check_roaming_permission(session: AsyncSession, cpo_id, cpo_cc, emsp_id, emsp_cc) -> bool:
+async def check_roaming_permission(session: AsyncSession, cpo_id, cpo_cc, emsp_id, emsp_cc, permission) -> bool:
     # 1. Create a subquery that looks for the agreement
 
     print(f"Checking if roaming agreement exists between CPO: {cpo_cc}{cpo_id} and EMSP: {emsp_cc}{emsp_id}")
@@ -76,14 +76,20 @@ async def check_roaming_permission(session: AsyncSession, cpo_id, cpo_cc, emsp_i
             RoamingAgreement.cpo_country_code == cpo_cc,
             RoamingAgreement.cpo_party_id == cpo_id,
             RoamingAgreement.status == AgreementStatus.ACTIVE,
-            RoamingAgreement.location_enabled == True  # Or whichever permission you are checking
         )
     )
 
-    # 2. Wrap it in exists()
-    statement = select(exists(subquery))
-
     # 3. Execute and get the scalar (True/False)
-    result = await session.execute(statement)
-    #print(f"Result is: {result}")
-    return result.scalar() or False
+    result = await (session.execute(subquery))
+    agreement = result.scalar_one_or_none()
+
+    print(f"Roaming Agreement Found: {agreement}")
+
+    if agreement is None:
+        print(f"There is no active roaming agreement found.")
+        return False
+
+    is_allowed = getattr(agreement, permission, False)
+
+    print(f"Permission '{permission}' allowed: {is_allowed}")
+    return is_allowed

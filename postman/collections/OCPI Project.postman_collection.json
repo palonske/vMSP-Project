@@ -252,6 +252,33 @@
                 }
               },
               "response": []
+            },
+            {
+              "name": "GET Specific Tariff",
+              "id": "735579a4-c724-47b7-bfe7-94a17e76d410",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Token {{AUTH}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{BASE_URL}}/cpo/2.1.1/tariffs/",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "cpo",
+                    "2.1.1",
+                    "tariffs",
+                    ""
+                  ]
+                }
+              },
+              "response": []
             }
           ],
           "id": "cb687cdd-4add-4047-8b38-5adb4e028958"
