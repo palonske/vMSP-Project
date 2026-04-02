@@ -10,8 +10,15 @@ from app.database import engine, create_db_and_tables
 from sqlmodel import Session
 from app.api.v2_1_1 import locations, tariffs, credentials211
 from app.api import emspversions, credentials, cpoversions
+from app.core.middleware import OCPILoggingMiddleware, setup_logging
 
 app = FastAPI(title="OCPI Platform")
+
+# Set up logging
+setup_logging()
+
+# Add logging middleware
+app.add_middleware(OCPILoggingMiddleware)
 
 app.include_router(
     credentials211.cporouter,
