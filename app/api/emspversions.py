@@ -6,47 +6,51 @@ from app.core.utils import get_timestamp
 router = APIRouter()
 
 @router.get("/versions")
-async def get_available_version(request: Request):
-
+async def get_available_versions(request: Request):
+    """Return all supported OCPI versions."""
     base = settings.BASE_URL.rstrip("/")
-    #timestamp = get_timestamp()
 
     return {
         "status_code": 1000,
         "status_message": "Success",
         "timestamp": get_timestamp(),
         "data": [
-            {
-                "version": settings.OCPI_VERSION,
-                "url": f"{base}/ocpi/emsp/{settings.OCPI_VERSION}"
-            }
+            {"version": version, "url": f"{base}/ocpi/emsp/{version}"}
+            for version in settings.SUPPORTED_OCPI_VERSIONS
         ]
     }
 
-@router.get("/2.1.1")
-async def get_211_version_details(request: Request):
-    # We use settings.BASE_URL to build the absolute paths
+@router.get("/{version}")
+async def get_version_details(request: Request, version: str):
+    """Return endpoints for a specific OCPI version."""
+    if version not in settings.SUPPORTED_OCPI_VERSIONS:
+        return {
+            "status_code": 3000,
+            "status_message": f"Unsupported version: {version}",
+            "timestamp": get_timestamp(),
+            "data": None
+        }
+
     base = settings.BASE_URL.rstrip("/")
-    #timestamp = get_timestamp()
 
     return {
         "status_code": 1000,
         "status_message": "Success",
         "timestamp": get_timestamp(),
         "data": {
-            "version": settings.OCPI_VERSION,
+            "version": version,
             "endpoints": [
                 {
                     "identifier": "credentials",
-                    "url": f"{base}/ocpi/emsp/{settings.OCPI_VERSION}/credentials"
+                    "url": f"{base}/ocpi/emsp/{version}/credentials"
                 },
                 {
                     "identifier": "locations",
-                    "url": f"{base}/ocpi/emsp/{settings.OCPI_VERSION}/locations"
+                    "url": f"{base}/ocpi/emsp/{version}/locations"
                 },
                 {
                     "identifier": "tariffs",
-                    "url": f"{base}/ocpi/emsp/{settings.OCPI_VERSION}/tariffs"
+                    "url": f"{base}/ocpi/emsp/{version}/tariffs"
                 }
             ]
         }
