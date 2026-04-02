@@ -10,6 +10,7 @@ from app.database import engine, create_db_and_tables
 from sqlmodel import Session
 from app.api.v2_1_1 import locations, tariffs, credentials211
 from app.api import emspversions, credentials, cpoversions
+from app.core.utils import fix_date
 
 app = FastAPI(title="OCPI Platform")
 
@@ -90,14 +91,6 @@ def log(string):
 
 if __name__ == "__main__":
     main()
-
-def fix_date(data_dict):
-    """Helper to convert OCPI date strings to Python datetime objects."""
-    date_str = data_dict.get("last_updated")
-    if date_str and isinstance(date_str, str):
-        # Replace 'Z' with UTC offset so fromisoformat works
-        data_dict["last_updated"] = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
-    return data_dict
 
 def test_location_db():
     raw_data = {
