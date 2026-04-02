@@ -17,8 +17,8 @@ async def get_available_version(request: Request):
         "timestamp": get_timestamp(),
         "data": [
             {
-                "version": "2.1.1",
-                "url": f"{base}/ocpi/emsp/2.1.1"
+                "version": settings.OCPI_VERSION,
+                "url": f"{base}/ocpi/emsp/{settings.OCPI_VERSION}"
             }
         ]
     }
@@ -34,19 +34,19 @@ async def get_211_version_details(request: Request):
         "status_message": "Success",
         "timestamp": get_timestamp(),
         "data": {
-            "version": "2.1.1",
+            "version": settings.OCPI_VERSION,
             "endpoints": [
                 {
                     "identifier": "credentials",
-                    "url": f"{base}/ocpi/emsp/2.1.1/credentials"
+                    "url": f"{base}/ocpi/emsp/{settings.OCPI_VERSION}/credentials"
                 },
                 {
                     "identifier": "locations",
-                    "url": f"{base}/ocpi/emsp/2.1.1/locations"
+                    "url": f"{base}/ocpi/emsp/{settings.OCPI_VERSION}/locations"
                 },
                 {
                     "identifier": "tariffs",
-                    "url": f"{base}/ocpi/emsp/2.1.1/tariffs"
+                    "url": f"{base}/ocpi/emsp/{settings.OCPI_VERSION}/tariffs"
                 }
             ]
         }
