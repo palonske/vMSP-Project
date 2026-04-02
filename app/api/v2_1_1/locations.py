@@ -243,7 +243,7 @@ async def put_location(
 ):
 
     #Checking to see if Partner matches path parameters:
-    if not party_id == partner.party_id and country_code == partner.country_code:
+    if not (party_id == partner.party_id and country_code == partner.country_code):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Path parameters do not match registered partner.")
 
 
@@ -267,7 +267,7 @@ async def patch_location(
         session: AsyncSession = Depends(get_session)
 ):
     #Checking to see if Partner matches path parameters:
-    if not party_id == partner.party_id and country_code == partner.country_code:
+    if not (party_id == partner.party_id and country_code == partner.country_code):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Path parameters do not match registered partner.")
 
 
@@ -343,7 +343,7 @@ async def patch_evse(
 ):
 
     #Checking to see if Partner matches path parameters:
-    if not party_id == partner.party_id and country_code == partner.country_code:
+    if not (party_id == partner.party_id and country_code == partner.country_code):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Path parameters do not match registered partner.")
 
     # 1. Fetch the specific EVSE and verify it belongs to the Location
