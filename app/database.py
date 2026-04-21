@@ -9,6 +9,7 @@ import os
 from app.models.location import Location
 from app.models.evse import EVSE
 from app.models.connector import Connector
+from app.models.session import Session as OCPISession, ChargingPeriod, CdrDimension
 
 # 2. SETUP ENGINE
 sqlite_file_name = "database.db"
