@@ -108,6 +108,28 @@ Rules:
 - If a commit spans multiple stories (rare), list all keys: `[OCPI-4][OCPI-9]`.
 - Body is optional but encouraged for non-obvious decisions.
 
+### Epic Integration Branches
+
+Large, multi-story epics use a dedicated long-lived **epic branch** that accumulates all story work before a single PR lands on `main`.
+
+**Current epic branch:** `feature/OCPI-1-sessions-module`
+
+```
+main
+  └── feature/OCPI-1-sessions-module   ← epic integration branch
+        ├── feature/OCPI-2-...          (merged ✓)
+        ├── feature/OCPI-3-...          (merged ✓)
+        ├── feature/OCPI-4-...          → PR targets epic branch
+        └── ...
+              └── (one final PR: epic branch → main when all stories done)
+```
+
+Rules:
+- Story branches **branch from** the epic branch and **PR back into** the epic branch.
+- The epic branch itself is only merged to `main` once the entire epic is complete.
+- Keep the epic branch up to date by merging from `main` if main advances significantly during development.
+- Do not branch story work from `main` when an active epic branch exists for that epic.
+
 ### Pull Requests
 
 - **Title:** `[OCPI-<n>] <story summary>` — mirrors the commit style.
@@ -115,15 +137,15 @@ Rules:
   - A brief summary of what was implemented.
   - Link to the Jira issue (e.g., `https://vmspproject.atlassian.net/browse/OCPI-3`).
   - Test plan: what was tested and how.
-- **Target branch:** `main`.
-- **One story per PR.** Do not bundle multiple stories unless they are tightly coupled with no way to separate.
+- **Target branch:** The active epic branch for the story's epic (e.g., `feature/OCPI-1-sessions-module`). Target `main` only for work that does not belong to an open epic, or for the final epic → main PR.
+- **One story per PR.**
 - **Tests must pass** before requesting a review or merging.
 - Do not merge your own PR without review (when working with other humans/agents).
 
 ### Protected Branch Rules
 
 - `main` is the source of truth — never force-push to it.
-- Never commit directly to `main` — always use a branch + PR.
+- Never commit directly to `main` or the epic branch — always use a story branch + PR.
 - Never use `--no-verify` to skip hooks.
 
 ---
@@ -142,19 +164,21 @@ Once an agent owns a story, no other agent should touch that branch or story unt
 
 Based on the OCPI-1 dependency graph, the following parallel execution windows exist:
 
-**Wave 1 — Sequential (no parallelism possible)**
-- Agent A: OCPI-2 (Data Model) → must merge before Wave 2
+All story PRs target `feature/OCPI-1-sessions-module` (the epic branch), not `main`.
 
-**Wave 2 — Sequential**
-- Agent A: OCPI-3 (Service Layer) → must merge before Wave 3
+**Wave 1 — Complete ✓**
+- OCPI-2 (Data Model) — merged to epic branch
 
-**Wave 3 — Parallel (all depend on OCPI-3)**
+**Wave 2 — Complete ✓**
+- OCPI-3 (Service Layer) — merged to epic branch
+
+**Wave 3 — Parallel (all branch from and PR into the epic branch)**
 - Agent A: OCPI-4 (CPO Receiver Endpoints)
 - Agent B: OCPI-5 (eMSP Pull Endpoints)
 - Agent C: OCPI-6 (CPO Pull Endpoint)
 - Agent D: OCPI-8 (Status Lifecycle)
 
-**Wave 4 — Parallel (after Wave 3 merges)**
+**Wave 4 — Parallel (after Wave 3 stories merge to epic branch)**
 - Agent A: OCPI-7 (Hub Forwarding — depends on OCPI-4)
 - Agent B: OCPI-9 (Module Registration — parallel)
 
