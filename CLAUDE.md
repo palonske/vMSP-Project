@@ -186,14 +186,23 @@ Format: `[OCPI-<n>] <imperative verb> <what changed>`
 - Use imperative mood: "Add", "Fix", "Remove", "Update".
 - Always include the Jira key prefix.
 
+### Epic Integration Branches
+
+Large epics use a single long-lived branch that accumulates all story work. Story PRs target the epic branch; one final PR merges the epic into `main` when all stories are done.
+
+**Active epic branch:** `feature/OCPI-1-sessions-module` (Sessions Module, OCPI-1)
+
+- Branch story work **from** the epic branch, PR **back into** it.
+- Do not target `main` directly for work that belongs to an open epic.
+
 ### Pull Requests
 
 - **Title:** `[OCPI-<n>] <story summary>`
 - **Body:** Brief summary, link to the Jira issue, and test plan.
-- **Target:** `main`
+- **Target:** The active epic branch for the story's epic. Use `main` only for non-epic work or for the final epic → main PR.
 - One story per PR.
 - Tests must pass before merging.
-- Never force-push to `main` or commit directly to it.
+- Never force-push to `main` or the epic branch, or commit directly to them.
 - Never use `--no-verify` to bypass hooks.
 
 ---
