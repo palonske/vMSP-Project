@@ -105,6 +105,24 @@ async def test_put_session_rejects_partner_mismatch(db):
 
 
 @pytest.mark.asyncio
+async def test_put_session_invalid_payload_returns_ocpi_error_envelope(db):
+    with pytest.raises(HTTPException) as exc:
+        await put_session(
+            country_code="US",
+            party_id="ABC",
+            session_id="session-1",
+            session_data=_put_payload(status="BOGUS"),
+            partner=_partner(),
+            session=db,
+        )
+
+    assert exc.value.status_code == 400
+    assert isinstance(exc.value.detail, dict)
+    assert exc.value.detail["status_code"] == 2000
+    assert "status_message" in exc.value.detail
+
+
+@pytest.mark.asyncio
 async def test_patch_session_returns_404_when_missing(db):
     with pytest.raises(HTTPException) as exc:
         await patch_session(
@@ -183,3 +201,5 @@ async def test_patch_session_rejects_invalid_status_transition(db):
         )
 
     assert exc.value.status_code == 400
+    assert isinstance(exc.value.detail, dict)
+    assert exc.value.detail["status_code"] == 2000

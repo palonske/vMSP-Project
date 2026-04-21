@@ -51,8 +51,8 @@ app.include_router(
     tags=["Tariffs v2.1.1"]
 )
 app.include_router(
-    sessions.cporouter,
-    prefix="/ocpi/cpo/2.1.1/sessions",
+    sessions.emsprouter,
+    prefix="/ocpi/emsp/2.1.1/sessions",
     tags=["Sessions v2.1.1"]
 )
 app.include_router(

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v2_1_1.schemas import Session as SessionSchema
@@ -15,10 +16,20 @@ cporouter = APIRouter()
 def _source_credentials_id(partner: PartnerProfile) -> str:
     # Keep credentials identity deterministic per CPO until a dedicated
     # credentials table/ID is introduced.
+    # TODO(OCPI-4 follow-up): if credentials_id storage format changes, this
+    # requires a data migration for already persisted session PK/FK values.
     return f"{partner.country_code}:{partner.party_id}"
 
 
-@cporouter.put("/{country_code}/{party_id}/{session_id}")
+def _ocpi_error(message: str, ocpi_status_code: int = 2000) -> dict:
+    return {
+        "status_code": ocpi_status_code,
+        "status_message": message,
+        "timestamp": get_timestamp(),
+    }
+
+
+@emsprouter.put("/{country_code}/{party_id}/{session_id}")
 async def put_session(
     country_code: str,
     party_id: str,
@@ -55,19 +66,24 @@ async def put_session(
             "timestamp": get_timestamp(),
             "data": SessionSchema.model_validate(updated),
         }
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=_ocpi_error(str(exc), 2000),
+        ) from exc
     except InvalidStatusTransition as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
+            detail=_ocpi_error(str(exc), 2000),
         ) from exc
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to process session: {exc}",
+            detail=_ocpi_error(f"Failed to process session: {exc}", 2000),
         ) from exc
 
 
-@cporouter.patch("/{country_code}/{party_id}/{session_id}")
+@emsprouter.patch("/{country_code}/{party_id}/{session_id}")
 async def patch_session(
     country_code: str,
     party_id: str,
@@ -109,10 +125,10 @@ async def patch_session(
     except InvalidStatusTransition as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
+            detail=_ocpi_error(str(exc), 2000),
         ) from exc
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
+            detail=_ocpi_error(str(exc), 2000),
         ) from exc
