@@ -93,7 +93,7 @@ async def put_tariff(
         session: AsyncSession = Depends(get_session)
 ):
     #Checking to see if Partner matches path parameters:
-    if not party_id == partner.party_id and country_code == partner.country_code:
+    if not (party_id == partner.party_id and country_code == partner.country_code):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Path parameters do not match registered partner.")
 
     try:
@@ -130,7 +130,7 @@ async def patch_tariff(
     # 1. Fetch the existing tariff with all nested data loaded
 
     #Checking to see if Partner matches path parameters:
-    if not party_id == partner.party_id and country_code == partner.country_code:
+    if not (party_id == partner.party_id and country_code == partner.country_code):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Path parameters do not match registered partner.")
 
     statement = (
