@@ -8,7 +8,7 @@ from app.models.evse import EVSE
 from app.models.connector import Connector
 from app.database import engine, create_db_and_tables
 from sqlmodel import Session
-from app.api.v2_1_1 import locations, tariffs, credentials211
+from app.api.v2_1_1 import locations, tariffs, credentials211, sessions
 from app.api import emspversions, credentials, cpoversions
 from app.core.middleware import OCPILoggingMiddleware, setup_logging
 
@@ -49,6 +49,11 @@ app.include_router(
     tariffs.cporouter,
     prefix="/ocpi/cpo/2.1.1/tariffs",
     tags=["Tariffs v2.1.1"]
+)
+app.include_router(
+    sessions.emsprouter,
+    prefix="/ocpi/emsp/2.1.1/sessions",
+    tags=["Sessions v2.1.1"]
 )
 app.include_router(
    emspversions.router,
