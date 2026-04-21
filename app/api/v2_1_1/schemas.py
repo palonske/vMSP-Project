@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from app.models.connector import ConnectorType
 from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
@@ -109,9 +110,65 @@ class PartnerSchema(BaseModel):
     party_id: str
     country_code: str
 
+
+class SessionStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    INVALID = "INVALID"
+    PENDING = "PENDING"
+
+
+class AuthMethod(str, Enum):
+    AUTH_REQUEST = "AUTH_REQUEST"
+    WHITELIST = "WHITELIST"
+
+
+class DimensionType(str, Enum):
+    ENERGY = "ENERGY"
+    FLAT = "FLAT"
+    MAX_CURRENT = "MAX_CURRENT"
+    MIN_CURRENT = "MIN_CURRENT"
+    PARKING_TIME = "PARKING_TIME"
+    TIME = "TIME"
+
+
+class CdrDimension(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    type: DimensionType
+    volume: float
+
+
+class ChargingPeriod(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    start_date_time: datetime
+    cdr_dimensions: List[CdrDimension]
+
+
+class Session(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    start_datetime: datetime
+    end_datetime: Optional[datetime] = None
+    kwh: float
+    auth_id: str
+    auth_method: AuthMethod
+    location_id: str
+    evse_uid: str
+    connector_id: str
+    meter_id: Optional[str] = None
+    currency: str
+    charging_periods: List[ChargingPeriod] = []
+    total_cost: Optional[float] = None
+    status: SessionStatus
+    last_updated: datetime
+
 ConnectorRead.model_rebuild()
 EVSERead.model_rebuild()
 LocationRead.model_rebuild()
 TariffRead.model_rebuild()
 PartnerSchema.model_rebuild()
 InternalRegister.model_rebuild()
+Session.model_rebuild()
